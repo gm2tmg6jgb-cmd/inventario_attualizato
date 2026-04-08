@@ -1,0 +1,2569 @@
+[
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "SG2",
+    "label": "SG2-M0162645-784",
+    "codice_hard": "M0162645",
+    "codice_s": "M0162644/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Laser W sca06 (151)",
+      "UT mza05",
+      "Hobbing frw78",
+      "Deburring egw08",
+      "Da Trattare",
+      "HT - (240)",
+      "Pallinatura",
+      "Emag dra110/111",
+      "Grinding rz14",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "SG3",
+    "label": "SG3-M0162624-784",
+    "codice_hard": "M0162624",
+    "codice_s": "M0162623/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Laser W sca78(151)",
+      "UT mza06",
+      "Hobbing frw76",
+      "Da Trattare",
+      "HT - (240)",
+      "Cono esterno sla110",
+      "Cono interno sla84",
+      "Grinding Rz44",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "SG4",
+    "label": "SG4-M0162639-785",
+    "codice_hard": "M0162639",
+    "codice_s": "M0162639/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Shaping stw07",
+      "Milling fra25",
+      "Hobbing frw217",
+      "Da Trattare",
+      "HT - (240)",
+      "Emag pre w dra 99/100",
+      "Grinding Rz14",
+      "Laser W Sca78",
+      "UT mza05",
+      "Cone Grinding sla92",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "SG5",
+    "label": "SG5-M0162622-784",
+    "codice_hard": "M0162622",
+    "codice_s": "M0162622/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Hobbing frw82",
+      "Da Trattare",
+      "HT - (600)",
+      "Emag pre w dra102/108",
+      "Power Honing hnw40",
+      "Laser W sca78(151)",
+      "UT1 mza06 --> 0h",
+      "Cone Grinding sla91",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "SGR",
+    "label": "SGR-M162524-784",
+    "codice_hard": "M162524",
+    "codice_s": "M0162523/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Laser W sca06 (151)",
+      "UT mza05",
+      "Hobbing frw79",
+      "Deburring egw08",
+      "Da Trattare",
+      "HT - (240)",
+      "Emag dra101/107",
+      "Grinding rz14",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "RG",
+    "label": "RG-FD1-M0162587-790",
+    "codice_hard": "FD1",
+    "codice_s": "M0162587/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Soft Turning dra44",
+      "Hobbing frw15",
+      "Deburring egw06",
+      "Da Trattare",
+      "HT - (60)",
+      "Pallinatura",
+      "Emag dra190",
+      "Grinding rz29",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "DCT Eco",
+    "famiglia": "RG",
+    "label": "RG-FD2-M0162901-790",
+    "codice_hard": "FD2",
+    "codice_s": "M0162901/S",
+    "demand_fd1": 900,
+    "stazioni_list": [
+      "Soft Turning dra44",
+      "Hobbing frw15",
+      "Deburring egw06",
+      "Da Trattare",
+      "HT - (60)",
+      "Emag dra190",
+      "Grinding rz29",
+      "Da lavare",
+      "Finiti"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG2",
+    "label": "SG2-M0153390-790",
+    "codice_hard": "M0153389",
+    "codice_s": "M0153389/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra60",
+      "DMC zsa19",
+      "Laser W sca10",
+      "Hobbing frw193 (frw 217)",
+      "Deburring egw16",
+      "DA Trattare",
+      "HT - (120)",
+      "Emag dra110/111",
+      "Grinding rz48",
+      "Da lavare",
+      "Sala"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG3",
+    "label": "SG3-M0153402-790",
+    "codice_hard": "M0153401",
+    "codice_s": "M0153401/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra60 - 71",
+      "DMC zsa19",
+      "Laser W est sca08",
+      "Laser W int sca10",
+      "Hobbing frw77 (frw 79)",
+      "Deburring 08",
+      "DA Trattare",
+      "HT - (144)",
+      "Grinding cone sla108",
+      "Emag dra009",
+      "Grinding rz48/10",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG4",
+    "label": "SG4-M0153400-791",
+    "codice_hard": "M0170686",
+    "codice_s": "M0170686/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra65/66",
+      "DMC zsa19",
+      "Laser W sca09",
+      "Shaping stw07",
+      "Milling fra23",
+      "Hobbing frw77 (frw 79)",
+      "DA Trattare",
+      "HT - (144)",
+      "Emag dra97/98",
+      "Grinding rz48/44",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG5",
+    "label": "SG5-M0153394-790",
+    "codice_hard": "M0155199",
+    "codice_s": "M0155199/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra61",
+      "DMC zsa19",
+      "Laser W sca09",
+      "Hobbing frw82",
+      "Deburring egw08",
+      "DA Trattare",
+      "HT - (288)",
+      "Grinding cone sla86",
+      "Grinding rz48",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG6",
+    "label": "SG6-M0153388-790",
+    "codice_hard": "M0153387",
+    "codice_s": "M0153387/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra69/70",
+      "Hobbing frw10",
+      "Laser W sca151",
+      "UT mza05",
+      "DMC zsa19",
+      "DA Trattare",
+      "HT - (360)",
+      "Grinding cone SLA109",
+      "Da lavare",
+      "Ingranometro"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG7",
+    "label": "SG7-M0153404-790",
+    "codice_hard": "M0155201",
+    "codice_s": "M0155201/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra69/70",
+      "Hobbing frw 980",
+      "Deburring egw05",
+      "Laser W sca151",
+      "UT mza05",
+      "DMC zsa19",
+      "DA Trattare",
+      "HT - (360)",
+      "Grinding cone sla90",
+      "Da lavare",
+      "Ingranometro/sala"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SG8",
+    "label": "SG8-M0153398-790",
+    "codice_hard": "M0153397",
+    "codice_s": "M0153397/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra62",
+      "Hobbing frw980",
+      "Laser W sca151",
+      "UT mza05",
+      "DMC zsa19",
+      "DA Trattare",
+      "HT - (360)",
+      "Grinding cone sla87",
+      "Da lavare",
+      "Ingranometro"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "SGR",
+    "label": "SGR-M0153392-790",
+    "codice_hard": "M0153391",
+    "codice_s": "M0153391/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra60 - 71",
+      "DMC zsa19",
+      "Laser W sca08",
+      "Hobbing frw140",
+      "DA Trattare",
+      "HT - (198)",
+      "Emag dra101/107",
+      "Grinding rw26",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "PG",
+    "label": "PG-M0154996-790",
+    "codice_hard": "M0154996",
+    "codice_s": "M0154996/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra62",
+      "DMC ZSA19",
+      "Broaching raa009",
+      "Lavaggio ORE 48/49",
+      "Hobbing FRW82",
+      "DA Trattare",
+      "HT - (360)",
+      "Emag dra109",
+      "Grinding rz26",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "FG5/7",
+    "label": "FG5/7- M0153383-790",
+    "codice_hard": "M0155197",
+    "codice_s": "M0155197/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra61",
+      "DMC zsa19",
+      "Hobbing frw78",
+      "Sbavatura egw14",
+      "DA Trattare",
+      "HT - (288)",
+      "Pallinatura",
+      "Emag dra109",
+      "Grinding rz26",
+      "Da lavare"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "RG FD1",
+    "label": "RG FD1-M0153407-791",
+    "codice_hard": "M0153407",
+    "codice_s": "M0153407/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra58/59",
+      "DMC zsa22",
+      "Hobbing frw73/189",
+      "Sbavatura egw07",
+      "DA Trattare",
+      "HT - (60)",
+      "Emag dra190",
+      "Grinding rz29",
+      "Da lavare",
+      "Sala"
+    ]
+  },
+  {
+    "progetto": "8Fe",
+    "famiglia": "RG FD2",
+    "label": "RG FD2-M0153703-791",
+    "codice_hard": "M0153703",
+    "codice_s": "M0153703/S",
+    "demand_fd1": 370,
+    "stazioni_list": [
+      "Soft Turning dra58/59",
+      "DMC zsa22",
+      "Hobbing frw73/189",
+      "Sbavatura egw07",
+      "DA Trattare",
+      "HT - (60)",
+      "Emag dra190",
+      "Grinding rz29",
+      "Da lavare",
+      "Sala"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511108150",
+    "codice_hard": "2511108150",
+    "codice_s": "2511108150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511124450",
+    "codice_hard": "2511124450",
+    "codice_s": "2511124450",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-Coroncina",
+    "codice_hard": "",
+    "codice_s": "CORONCINA",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WS CORONCINA",
+      "PFAUTER MOZZETTO",
+      "mozzetto SCA11006",
+      "DG cor SCA11006",
+      "PFAUTER DG",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "ore33",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511108350",
+    "codice_hard": "2511108350",
+    "codice_s": "2511108350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WS CORONCINA",
+      "PFAUTER MOZZETTO",
+      "mozzetto SCA11006",
+      "DG cor SCA11006",
+      "PFAUTER DG",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "ore33",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511122350",
+    "codice_hard": "2511122350",
+    "codice_s": "2511122350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WS CORONCINA",
+      "PFAUTER MOZZETTO",
+      "mozzetto SCA11006",
+      "DG cor SCA11006",
+      "PFAUTER DG",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "ore33",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511124650",
+    "codice_hard": "2511124650",
+    "codice_s": "2511124650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WS CORONCINA",
+      "PFAUTER MOZZETTO",
+      "mozzetto SCA11006",
+      "DG cor SCA11006",
+      "PFAUTER DG",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "ore33",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511108951",
+    "codice_hard": "",
+    "codice_s": "2511108951",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511122850",
+    "codice_hard": "",
+    "codice_s": "2511122850",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511125150",
+    "codice_hard": "2511125150",
+    "codice_s": "2511125150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511109151",
+    "codice_hard": "2511109151",
+    "codice_s": "2511109151",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511123050",
+    "codice_hard": "2511123050",
+    "codice_s": "2511123050",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511125350",
+    "codice_hard": "",
+    "codice_s": "2511125350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511122550",
+    "codice_hard": "2511122550",
+    "codice_s": "2511122550",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511124850",
+    "codice_hard": "2511124850",
+    "codice_s": "2511124850",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511108750",
+    "codice_hard": "",
+    "codice_s": "2511108750",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511122650",
+    "codice_hard": "",
+    "codice_s": "2511122650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511124950",
+    "codice_hard": "",
+    "codice_s": "2511124950",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511108052",
+    "codice_hard": "2511108052",
+    "codice_s": "2511108052",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511130051",
+    "codice_hard": "",
+    "codice_s": "2511130051",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511124351",
+    "codice_hard": "2511124351",
+    "codice_s": "2511124351",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511109350",
+    "codice_hard": "2511109350",
+    "codice_s": "2511109350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511123250",
+    "codice_hard": "2511123250",
+    "codice_s": "2511123250",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511125550",
+    "codice_hard": "2511125550",
+    "codice_s": "2511125550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SGRW",
+    "label": "SGRW-2511109451",
+    "codice_hard": "2511109451",
+    "codice_s": "2511109451",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "PALLINATURA",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511108150",
+    "codice_hard": "2511108150",
+    "codice_s": "2511108150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-LOW TORQUE\nM0140994",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140994",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511124450",
+    "codice_hard": "2511124450",
+    "codice_s": "2511124450",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-0558538300",
+    "codice_hard": "",
+    "codice_s": "0558538300",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511108350",
+    "codice_hard": "2511108350",
+    "codice_s": "2511108350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "432",
+      "3240"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0156548",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0156548",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "432",
+      "3240"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511122350",
+    "codice_hard": "2511122350",
+    "codice_s": "2511122350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "432",
+      "3240"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0146872",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0146872",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "432",
+      "3240"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511124650",
+    "codice_hard": "2511124650",
+    "codice_s": "2511124650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "432",
+      "3240"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511108952",
+    "codice_hard": "2511108952",
+    "codice_s": "2511108952",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511122851",
+    "codice_hard": "2511122851",
+    "codice_s": "2511122851",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511125150",
+    "codice_hard": "2511125150",
+    "codice_s": "2511125150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511109151",
+    "codice_hard": "2511109151",
+    "codice_s": "2511109151",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511123050",
+    "codice_hard": "2511123050",
+    "codice_s": "2511123050",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511125350",
+    "codice_hard": "",
+    "codice_s": "2511125350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511108650",
+    "codice_hard": "2511108650",
+    "codice_s": "2511108650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511122550",
+    "codice_hard": "2511122550",
+    "codice_s": "2511122550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511124850",
+    "codice_hard": "2511124850",
+    "codice_s": "2511124850",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511108751",
+    "codice_hard": "2511108751",
+    "codice_s": "2511108751",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511122651",
+    "codice_hard": "2511122651",
+    "codice_s": "2511122651",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511124950",
+    "codice_hard": "",
+    "codice_s": "2511124950",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511108052",
+    "codice_hard": "2511108052",
+    "codice_s": "2511108052",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0140999",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140999",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511130051",
+    "codice_hard": "",
+    "codice_s": "2511130051",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0160907",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0160907",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511124351",
+    "codice_hard": "2511124351",
+    "codice_s": "2511124351",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511109350",
+    "codice_hard": "2511109350",
+    "codice_s": "2511109350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511123250",
+    "codice_hard": "2511123250",
+    "codice_s": "2511123250",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511125550",
+    "codice_hard": "2511125550",
+    "codice_s": "2511125550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SGRW",
+    "label": "SGRW-2511109451",
+    "codice_hard": "2511109451",
+    "codice_s": "2511109451",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE33",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "PALLINATURA",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511108052",
+    "codice_hard": "2511108052",
+    "codice_s": "2511108052",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0140999",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140999",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511130051",
+    "codice_hard": "",
+    "codice_s": "2511130051",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511124351",
+    "codice_hard": "2511124351",
+    "codice_s": "2511124351",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511109350",
+    "codice_hard": "2511109350",
+    "codice_s": "2511109350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511123250",
+    "codice_hard": "2511123250",
+    "codice_s": "2511123250",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511125550",
+    "codice_hard": "2511125550",
+    "codice_s": "2511125550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511108150",
+    "codice_hard": "2511108150",
+    "codice_s": "2511108150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-LOW TORQUE\nM0140994",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140994",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511124450",
+    "codice_hard": "2511124450",
+    "codice_s": "2511124450",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-0558538300",
+    "codice_hard": "",
+    "codice_s": "0558538300",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511108350",
+    "codice_hard": "2511108350",
+    "codice_s": "2511108350",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0156548",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0156548",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511122350",
+    "codice_hard": "2511122350",
+    "codice_s": "2511122350",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0146872",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0146872",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511124650",
+    "codice_hard": "2511124650",
+    "codice_s": "2511124650",
+    "demand_fd1": 1200,
+    "stazioni_list": []
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511108952",
+    "codice_hard": "2511108952",
+    "codice_s": "2511108952",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511122851",
+    "codice_hard": "2511122851",
+    "codice_s": "2511122851",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511125150",
+    "codice_hard": "2511125150",
+    "codice_s": "2511125150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511109151",
+    "codice_hard": "2511109151",
+    "codice_s": "2511109151",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511123050",
+    "codice_hard": "2511123050",
+    "codice_s": "2511123050",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511125350",
+    "codice_hard": "",
+    "codice_s": "2511125350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511108650",
+    "codice_hard": "2511108650",
+    "codice_s": "2511108650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511122550",
+    "codice_hard": "2511122550",
+    "codice_s": "2511122550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511124850",
+    "codice_hard": "2511124850",
+    "codice_s": "2511124850",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511108751",
+    "codice_hard": "2511108751",
+    "codice_s": "2511108751",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511122651",
+    "codice_hard": "2511122651",
+    "codice_s": "2511122651",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511124950",
+    "codice_hard": "",
+    "codice_s": "2511124950",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511108052",
+    "codice_hard": "2511108052",
+    "codice_s": "2511108052",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0140999",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140999",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511130051",
+    "codice_hard": "",
+    "codice_s": "2511130051",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0160907",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0160907",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511124351",
+    "codice_hard": "2511124351",
+    "codice_s": "2511124351",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511109350",
+    "codice_hard": "2511109350",
+    "codice_s": "2511109350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511123250",
+    "codice_hard": "2511123250",
+    "codice_s": "2511123250",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511125550",
+    "codice_hard": "2511125550",
+    "codice_s": "2511125550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SGRW",
+    "label": "SGRW-2511109451",
+    "codice_hard": "2511109451",
+    "codice_s": "2511109451",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE33",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511108150",
+    "codice_hard": "2511108150",
+    "codice_s": "2511108150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-LOW TORQUE\nM0140994",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140994",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-2511124450",
+    "codice_hard": "2511124450",
+    "codice_s": "2511124450",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG1",
+    "label": "SG1-0558538300",
+    "codice_hard": "",
+    "codice_s": "0558538300",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "ORE 33",
+      "LASER",
+      "PFAUTER",
+      "SMUSSATURA",
+      "DA TRATTARE",
+      "DA PALLINARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511108350",
+    "codice_hard": "2511108350",
+    "codice_s": "2511108350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "720"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0156548",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0156548",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "720"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511122350",
+    "codice_hard": "2511122350",
+    "codice_s": "2511122350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "720"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-LOW TORQUE\nM0146872",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0146872",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "720"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "DG2",
+    "label": "DG2-2511124650",
+    "codice_hard": "2511124650",
+    "codice_s": "2511124650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "720"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511108952",
+    "codice_hard": "2511108952",
+    "codice_s": "2511108952",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511122851",
+    "codice_hard": "2511122851",
+    "codice_s": "2511122851",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG5",
+    "label": "SG5-2511125150",
+    "codice_hard": "2511125150",
+    "codice_s": "2511125150",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT.",
+      "EMAG",
+      "RH160",
+      "LASER",
+      "US",
+      "AC1",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511109151",
+    "codice_hard": "2511109151",
+    "codice_s": "2511109151",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT."
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511123050",
+    "codice_hard": "2511123050",
+    "codice_s": "2511123050",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT."
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG6",
+    "label": "SG6-2511125350",
+    "codice_hard": "",
+    "codice_s": "2511125350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "WEISSER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATT."
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511108650",
+    "codice_hard": "2511108650",
+    "codice_s": "2511108650",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511122550",
+    "codice_hard": "2511122550",
+    "codice_s": "2511122550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG3",
+    "label": "SG3-2511124850",
+    "codice_hard": "2511124850",
+    "codice_s": "2511124850",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "LORENZ",
+      "PRAEWEMA",
+      "PFAUTER",
+      "ORE 33",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511108751",
+    "codice_hard": "2511108751",
+    "codice_s": "2511108751",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511122651",
+    "codice_hard": "2511122651",
+    "codice_s": "2511122651",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG4",
+    "label": "SG4-2511124950",
+    "codice_hard": "",
+    "codice_s": "2511124950",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "AC1",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511108052",
+    "codice_hard": "2511108052",
+    "codice_s": "2511108052",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0140999",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0140999",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511130051",
+    "codice_hard": "",
+    "codice_s": "2511130051",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-LOW TORQUE\nM0160907",
+    "codice_hard": "",
+    "codice_s": "LOW TORQUE\nM0160907",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "RG",
+    "label": "RG-2511124351",
+    "codice_hard": "2511124351",
+    "codice_s": "2511124351",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "DA DENTARE",
+      "DA SBAVARE",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "DA PALLIN.",
+      "EMAG",
+      "RH260",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511109350",
+    "codice_hard": "2511109350",
+    "codice_s": "2511109350",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511123250",
+    "codice_hard": "2511123250",
+    "codice_s": "2511123250",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SG7",
+    "label": "SG7-2511125550",
+    "codice_hard": "2511125550",
+    "codice_s": "2511125550",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "WEISSER",
+      "STOZZA",
+      "PFAUTER",
+      "DA TRATTARE",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  },
+  {
+    "progetto": "DCT 300",
+    "famiglia": "SGRW",
+    "label": "SGRW-2511109451",
+    "codice_hard": "2511109451",
+    "codice_s": "2511109451",
+    "demand_fd1": 1200,
+    "stazioni_list": [
+      "Lotto soft",
+      "ORE33",
+      "LASER",
+      "PFAUTER",
+      "DA TRATTARE",
+      "IN TRATTAM.",
+      "PALLINATURA",
+      "EMAG",
+      "RH160",
+      "DA LAVARE"
+    ]
+  }
+]

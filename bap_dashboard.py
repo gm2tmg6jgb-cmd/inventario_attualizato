@@ -1,0 +1,2120 @@
+"""
+BAP Dashboard Generator
+Genera un file HTML interattivo con i dati consolidati dei 3 inventari.
+"""
+
+import json
+import os
+from datetime import datetime
+
+
+def genera_dashboard(components, output_path, mapping=None, pnum_matrix=None):
+    """Genera il file dashboard.html a partire dai componenti elaborati."""
+
+    base_dir = os.path.dirname(os.path.abspath(output_path))
+
+    def _fstatus(filename_base):
+        """Ritorna (css_class, ok_class, testo) cercando sia .xlsx che .xls."""
+        # Caso speciale per BAP1: controlla anche la cache JSON permanente
+        if filename_base == 'BAP1':
+            p_json = os.path.join(base_dir, 'bap_mapping_permanent.json')
+            if os.path.exists(p_json):
+                mtime = datetime.fromtimestamp(os.path.getmtime(p_json)).strftime('%d/%m %H:%M')
+                # Se l'Excel esiste, mostra quello, altrimenti mostra lo stato permanente
+                excel_exists = False
+                for ext in ['.XLSX', '.xlsx', '.xls', '.XLS']:
+                    if os.path.exists(os.path.join(base_dir, filename_base + ext)):
+                        excel_exists = True
+                        break
+                if not excel_exists:
+                    return 'present', 'ok', f'✓ Permanente ({mtime})'
+
+        for ext in ['.XLSX', '.xlsx', '.xls', '.XLS']:
+            p = os.path.join(base_dir, filename_base + ext)
+            if os.path.exists(p):
+                mtime = datetime.fromtimestamp(os.path.getmtime(p)).strftime('%d/%m %H:%M')
+                return 'present', 'ok', f'✓ {mtime}'
+        return '', 'miss', '✗ non presente'
+
+    zpp_cls,  zpp_ok,  zpp_txt  = _fstatus('CONFERMESAP')
+    mb51_cls, mb51_ok, mb51_txt = _fstatus('mb51')
+    bap1_cls, bap1_ok, bap1_txt = _fstatus('BAP1')
+
+    # Raggruppa per progetto
+    projects = {}
+    for c in components:
+        p = c['progetto']
+        if p not in projects:
+            projects[p] = []
+        projects[p].append(c)
+
+    # KPI per progetto
+    kpi = {}
+    for proj, comps in projects.items():
+        finiti_tot  = sum(c.get('finiti', 0) for c in comps)
+        wip_tot     = sum(c.get('tot_wip', 0) for c in comps)
+        rossi       = sum(1 for c in comps if c.get('semaforo') == 'rosso')
+        gialli      = sum(1 for c in comps if c.get('semaforo') == 'giallo')
+        verdi       = sum(1 for c in comps if c.get('semaforo') == 'verde')
+        delta_neg   = sum(c.get('delta_finiti', 0) for c in comps if c.get('delta_finiti', 0) < 0)
+        kpi[proj] = {
+            'finiti': finiti_tot,
+            'wip':    wip_tot,
+            'rossi':  rossi,
+            'gialli': gialli,
+            'verdi':  verdi,
+            'delta_neg': delta_neg,
+            'n_comp':    len(comps),
+        }
+
+    # Rack sizes per famiglia (pz per rack)
+    RACK_SIZES = {
+        'SG2': 80, 'SG3': 120, 'SG4': 120, 'SG5': 120, 'SGR': 80, 'RG': 30
+    }
+
+    # JSON per JavaScript
+    data_js = json.dumps({
+            'components': components,
+        'kpi': kpi,
+        'projects': list(projects.keys()),
+        'mapping': mapping or {},
+        'pnum_matrix': pnum_matrix or [], # Nuova matrice per la pagina PNUM
+        'rack_sizes': RACK_SIZES,
+    }, ensure_ascii=False)
+
+    now_str   = datetime.now().strftime('%d/%m/%Y %H:%M')
+    today_str = datetime.now().strftime('%Y-%m-%d')
+
+    html = f"""<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAP Dashboard - Controllo Produzione</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {{
+    --bg: #0f1117;
+    --card: #1a1d2e;
+    --card2: #22253a;
+    --accent: #4f8ef7;
+    --green: #28a745;
+    --yellow: #ffc107;
+    --red: #dc3545;
+    --text: #e8eaf0;
+    --muted: #8892a4;
+    --border: #2d3147;
+  }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }}
+  header {{
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }}
+  header h1 {{ font-size: 1.3rem; font-weight: 600; color: var(--accent); }}
+  header .subtitle {{ font-size: 0.8rem; color: var(--muted); margin-top: 2px; }}
+  .last-update {{ font-size: 0.78rem; color: var(--muted); text-align: right; }}
+  .main {{ padding: 16px 24px; }}
+
+  /* Tabs */
+  .tabs {{ display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }}
+  .tab-btn {{
+    background: none; border: none; color: var(--muted);
+    padding: 10px 20px; cursor: pointer; font-size: 0.92rem;
+    border-bottom: 2px solid transparent; transition: all .2s;
+  }}
+  .tab-btn:hover {{ color: var(--text); }}
+  .tab-btn.active {{ color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }}
+  .tab-pane {{ display: none; }}
+  .tab-pane.active {{ display: block; }}
+
+  /* KPI Cards */
+  /* Modifica inventario */
+  .mod-input {{
+    width: 90px; padding: 4px 8px; text-align: right;
+    border-radius: 4px; background: var(--card2);
+    border: 1px solid var(--border); color: var(--text); font-size: .85rem;
+    -moz-appearance: textfield;
+  }}
+  .mod-input::-webkit-outer-spin-button,
+  .mod-input::-webkit-inner-spin-button {{ -webkit-appearance: none; margin: 0; }}
+  .mod-input:focus {{ border-color: var(--accent); outline: none; }}
+  .mod-input.changed {{ border-color: var(--yellow); }}
+  .rack-label {{ font-size:.72rem; color:var(--muted); white-space:nowrap; }}
+
+  /* Target giornalieri */
+  .target-row {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }}
+  @media(max-width: 700px) {{ .target-row {{ grid-template-columns: 1fr; }} }}
+  .target-box {{
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px;
+    border-left: 4px solid var(--accent);
+    display: flex; flex-direction: column; gap: 4px;
+  }}
+  .target-box .t-proj {{ font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }}
+  .target-box .t-value {{ font-size: 2rem; font-weight: 800; line-height: 1.1; }}
+  .target-box .t-unit {{ font-size: .76rem; color: var(--muted); }}
+
+  .kpi-row {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }}
+  .kpi-card {{
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }}
+  .kpi-card .label {{ font-size: 0.76rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }}
+  .kpi-card .value {{ font-size: 1.8rem; font-weight: 700; margin-top: 6px; }}
+  .kpi-card .value.red {{ color: var(--red); }}
+  .kpi-card .value.green {{ color: var(--green); }}
+  .kpi-card .value.yellow {{ color: var(--yellow); }}
+  .kpi-card .value.blue {{ color: var(--accent); }}
+
+  /* Grid 2 col */
+  .grid-2 {{ display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }}
+  .grid-3 {{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }}
+  @media(max-width: 900px) {{ .grid-2, .grid-3 {{ grid-template-columns: 1fr; }} }}
+
+  /* Chart cards */
+  .chart-card {{
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }}
+  .chart-card h3 {{ font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }}
+  .chart-wrap {{ position: relative; height: calc(42vh - 60px); min-height: 220px; }}
+
+  /* Filters */
+  .filters {{
+    display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+  }}
+  .filter-group {{ display: flex; align-items: center; gap: 8px; }}
+  .filter-group label {{ font-size: 0.82rem; color: var(--muted); }}
+  select, input[type=text] {{
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 6px;
+    font-size: 0.84rem; outline: none;
+  }}
+  select:focus, input:focus {{ border-color: var(--accent); }}
+  .btn {{
+    background: var(--accent); color: #fff; border: none;
+    padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 0.84rem;
+    transition: opacity .2s;
+  }}
+  .btn:hover {{ opacity: .85; }}
+  .btn.secondary {{ background: var(--card2); color: var(--text); }}
+
+  /* Tabella */
+  .tbl-wrap {{ overflow-x: auto; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 0.84rem; }}
+  thead th {{
+    background: var(--card2); color: var(--muted); font-weight: 600;
+    padding: 10px 14px; text-align: left; font-size: 0.76rem;
+    text-transform: uppercase; letter-spacing: .04em;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }}
+  thead th:hover {{ color: var(--text); }}
+  tbody tr {{ border-bottom: 1px solid var(--border); transition: background .1s; }}
+  tbody tr:hover {{ background: var(--card2); }}
+  tbody td {{ padding: 9px 14px; }}
+  .badge {{
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 0.75rem; font-weight: 600;
+  }}
+  .badge.rosso  {{ background: rgba(220,53,69,.2);  color: var(--red);    }}
+  .badge.giallo {{ background: rgba(255,193,7,.2);  color: var(--yellow); }}
+  .badge.verde  {{ background: rgba(40,167,69,.2);  color: var(--green);  }}
+  /* Colori per progetto */
+  .proj-dcteco {{ background-color: rgba(79, 142, 247, 0.15); color: #4f8ef7; border: 1px solid rgba(79, 142, 247, 0.3); }}
+  .proj-8fe {{ background-color: rgba(206, 147, 216, 0.15); color: #ce93d8; border: 1px solid rgba(206, 147, 216, 0.3); }}
+  .proj-dct300 {{ background-color: rgba(77, 208, 225, 0.15); color: #4dd0e1; border: 1px solid rgba(77, 208, 225, 0.3); }}
+  .num {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  .neg {{ color: var(--red); }}
+  .pos {{ color: var(--green); }}
+
+  /* Barra stazioni */
+  .station-bar {{
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+  }}
+  .station-name {{ width: 180px; font-size: 0.82rem; color: var(--muted); flex-shrink: 0; }}
+  .bar-wrap {{ flex: 1; background: var(--card2); border-radius: 4px; height: 14px; overflow: hidden; }}
+  .bar-fill {{ height: 100%; border-radius: 4px; background: var(--accent); transition: width .3s; }}
+  .station-qty {{ width: 70px; text-align: right; font-size: 0.82rem; font-weight: 600; }}
+
+  .sap-notice strong {{ color: var(--yellow); }}
+
+  /* Import Slots */
+  .import-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }}
+  .import-slot {{
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color .2s;
+  }}
+  .import-slot.present {{ border-color: rgba(40,167,69,0.5); }}
+  .import-slot.selected {{ border-color: var(--accent); }}
+  .import-slot-type {{ font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }}
+  .import-slot-name {{ font-size:.9rem; font-weight:700; }}
+  .import-slot-status.ok   {{ font-size:.75rem; color:var(--green); }}
+  .import-slot-status.miss {{ font-size:.75rem; color:var(--muted); }}
+  .import-slot-chosen {{ font-size:.75rem; color:var(--accent); min-height:1em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
+  .import-select-btn {{
+    background: transparent; border: 1px solid var(--accent);
+    color: var(--accent); border-radius: 6px;
+    padding: 4px 10px; font-size:.8rem; cursor: pointer;
+    margin-top: 4px; width: fit-content;
+  }}
+  .import-select-btn:hover {{ background: var(--accent); color: white; }}
+  .upload-btn {{
+    background: var(--accent); color: white; border: none;
+    padding: 10px 24px; border-radius: 6px;
+    font-weight: 600; cursor: pointer;
+  }}
+  /* KPI Modal */
+  .kpi-card {{ cursor: pointer; transition: border-color .15s, transform .1s; }}
+  .kpi-card:hover {{ border-color: var(--accent); transform: translateY(-2px); }}
+  .modal-overlay {{
+    display: none; position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+    background: rgba(0,0,0,0.75); z-index: 2000;
+    align-items: flex-start; justify-content: center;
+    padding-top: 60px;
+  }}
+  .modal-overlay.open {{ display: flex; }}
+  .modal-box {{
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; width: min(900px, 95vw);
+    max-height: 75vh; display: flex; flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  }}
+  .modal-header {{
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }}
+  .modal-title {{ font-size: .95rem; font-weight: 700; color: var(--accent); }}
+  .modal-close {{
+    background: none; border: none; color: var(--muted);
+    font-size: 1.3rem; cursor: pointer; padding: 4px 8px; border-radius: 4px;
+  }}
+  .modal-close:hover {{ color: var(--text); background: var(--card2); }}
+  .modal-body {{ overflow-y: auto; padding: 0 24px 20px; }}
+
+  /* ─── Light mode ─── */
+  html.light {{
+    --bg: #f0f2f7; --card: #ffffff; --card2: #e4e8f2;
+    --text: #1a1d2e; --muted: #5a6478; --border: #cdd3e3;
+    --accent: #3a7ef5; --green: #1a7a32; --yellow: #a07800; --red: #b52030;
+  }}
+  html.light header {{ background: var(--card); }}
+  html.light .badge.verde  {{ background:#d4f0dc; color:#1a7a32; }}
+  html.light .badge.giallo {{ background:#fff3cd; color:#a07800; }}
+  html.light .badge.rosso  {{ background:#fde0e3; color:#b52030; }}
+  #themeBtn {{ background:none; border:1px solid var(--border); color:var(--muted);
+    padding:5px 10px; border-radius:6px; cursor:pointer; font-size:.85rem; }}
+  #themeBtn:hover {{ color:var(--text); border-color:var(--text); }}
+
+  /* ─── Print ─── */
+  @media print {{
+    header, .tabs, .filters, #detChangedBanner,
+    #detEditBtn, #detSaveBtn, #detResetBtn, #printDetBtn,
+    .tab-pane:not(#tab-dettaglio) {{ display: none !important; }}
+    #tab-dettaglio {{ display: block !important; }}
+    .main {{ padding: 8px; }}
+    body {{ background: #fff; color: #000; }}
+    .badge.verde  {{ background:#d4f0dc !important; color:#1a7a32 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    .badge.giallo {{ background:#fff3cd !important; color:#a07800 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+    .badge.rosso  {{ background:#fde0e3 !important; color:#b52030 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }}
+  }}
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:20px">
+    <div>
+      <h1>⚙️ BAP Dashboard — Controllo Produzione</h1>
+      <div class="subtitle">Consolidamento automatico inventari · DCT Eco · 8Fe · DCT 300</div>
+    </div>
+    <button class="upload-btn" onclick="switchTab('sap', document.querySelector('.tab-btn:last-child'))" style="margin-top:0;background:var(--green)">
+      📥 Importa / Aggiorna Dati
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+    <div class="last-update">Aggiornato: {now_str}</div>
+  </div>
+</header>
+
+
+
+<div class="main">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview', this)">📊 Overview</button>
+    <button class="tab-btn" onclick="switchTab('priorita', this)">🚨 Priorità</button>
+    <button class="tab-btn" onclick="switchTab('stazioni', this)">🏭 WIP per Stazione</button>
+    <button class="tab-btn" onclick="switchTab('matrix', this)">📋 Nuovo Flusso (Live)</button>
+    <button class="tab-btn" onclick="switchTab('dettaglio', this)">📦 Inventari</button>
+    <button class="tab-btn" onclick="switchTab('archivio', this)">📦 Archivio</button>
+    <button class="tab-btn" onclick="switchTab('pnum', this)">📊 P-NUM Flow (Sync)</button>
+    <button class="tab-btn" onclick="switchTab('vincoli', this)">⛓️ Vincoli</button>
+    <button class="tab-btn" onclick="switchTab('mapping', this)">🛠️ Mappatura SAP</button>
+    <button class="tab-btn" onclick="switchTab('sap', this)">📥 Import SAP</button>
+  </div>
+
+  <!-- ═══════════════════════════════ OVERVIEW ═══════════════════════════════ -->
+  <div id="tab-overview" class="tab-pane active">
+
+    <!-- Selettore BAP -->
+    <div style="display:flex; gap:10px; margin-bottom:20px; border-bottom:2px solid var(--border); padding-bottom:10px">
+      <button class="bap-btn" onclick="setBap('BAP3', this)" style="padding:8px 16px; border-radius:6px; border:none; background:var(--card2); color:white; cursor:pointer; font-weight:bold; transition:all 0.2s">🌍 BAP3 (Trattamento Termico)</button>
+      <button class="bap-btn" onclick="setBap('BAP1', this)" style="padding:8px 16px; border-radius:6px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-weight:bold; transition:all 0.2s">⚙️ BAP1 (Ruote)</button>
+      <button class="bap-btn" onclick="setBap('BAP2', this)" style="padding:8px 16px; border-radius:6px; border:none; background:transparent; color:var(--muted); cursor:pointer; font-weight:bold; transition:all 0.2s">🔩 BAP2 (Alberi)</button>
+    </div>
+
+    <!-- Target giornalieri -->
+    <div id="targetBoxesContainer" class="target-row"></div>
+
+    <!-- KPI per progetto renderizzati da JS -->
+    <div id="overviewKpiContainer"></div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <h3>Giorni di Copertura Finiti per Componente</h3>
+        <div class="chart-wrap"><canvas id="chartCov"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>Distribuzione Semafori per Progetto</h3>
+        <div class="chart-wrap"><canvas id="chartSemafori"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin-bottom:20px">
+      <h3>WIP Totale per Stazione (Top 15)</h3>
+      <div class="chart-wrap" style="height:calc(55vh - 60px);min-height:300px"><canvas id="chartStazioni"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════ MATRIX ═══════════════════════════════ -->
+  <div id="tab-matrix" class="tab-pane">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Progetto:</label>
+        <select id="filtProjMatrix" onchange="renderMatrix()">
+          <option value="">Tutti</option>
+          {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Cerca:</label>
+        <input type="text" id="filtSearchMatrix" placeholder="Cerca..." oninput="renderMatrix()">
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="tbl-wrap" style="max-height: calc(100vh - 250px); overflow: auto;">
+        <table id="tblMatrix" style="font-size: 0.75rem; white-space: nowrap;">
+          <thead id="tblMatrixHead" style="position: sticky; top: 0; z-index: 10; background: var(--card2);"></thead>
+          <tbody id="tblMatrixBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ PRIORITÀ ═══════════════════════════════ -->
+  <div id="tab-priorita" class="tab-pane">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Progetto:</label>
+        <select id="filtProjPrio" onchange="filterPriority()">
+          <option value="">Tutti</option>
+          {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Semaforo:</label>
+        <select id="filtSemPrio" onchange="filterPriority()">
+          <option value="">Tutti</option>
+          <option value="rosso">🔴 Rosso (≤1 gg)</option>
+          <option value="giallo">🟡 Giallo (1-3 gg)</option>
+          <option value="verde">🟢 Verde (>3 gg)</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Cerca:</label>
+        <input type="text" id="filtSearchPrio" placeholder="Codice / componente..." oninput="filterPriority()">
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="tbl-wrap">
+        <table id="tblPriority">
+          <thead>
+            <tr>
+              <th onclick="sortTable('tblPriority',0)">#</th>
+              <th onclick="sortTable('tblPriority',1)">Progetto</th>
+              <th onclick="sortTable('tblPriority',2)">Componente</th>
+              <th onclick="sortTable('tblPriority',3)">Codice</th>
+              <th onclick="sortTable('tblPriority',4)">Copertura (gg)</th>
+              <th onclick="sortTable('tblPriority',5)">Finiti</th>
+              <th onclick="sortTable('tblPriority',6)">WIP Totale</th>
+              <th onclick="sortTable('tblPriority',7)">Delta Finiti</th>
+              <th onclick="sortTable('tblPriority',8)">Stato</th>
+            </tr>
+          </thead>
+          <tbody id="tblPriorityBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ VINCOLI ═══════════════════════════════ -->
+  <div id="tab-vincoli" class="tab-pane">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Progetto:</label>
+        <select id="filtProjVincoli" onchange="renderVincoli()">
+          <option value="">Tutti</option>
+          {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Cerca:</label>
+        <input type="text" id="filtSearchVincoli" placeholder="Cerca..." oninput="renderVincoli()">
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Analisi Vincoli per Componente</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">
+        Ogni riga rappresenta un componente. Il <strong>Punto Critico (Bottleneck)</strong> è la stazione nel flusso del componente con il maggior indice di ritardo globale.
+      </p>
+      <div class="tbl-wrap">
+        <table id="tblVincoli">
+          <thead>
+            <tr>
+              <th onclick="sortTable('tblVincoli',0)">Componente</th>
+              <th onclick="sortTable('tblVincoli',1)">Codice</th>
+              <th onclick="sortTable('tblVincoli',2)">Punto Critico (Stazione)</th>
+              <th onclick="sortTable('tblVincoli',3)" class="num">Indice Global Staz. (gg)</th>
+              <th onclick="sortTable('tblVincoli',4)" class="num">WIP Comp. Totale</th>
+              <th onclick="sortTable('tblVincoli',5)">Status</th>
+            </tr>
+          </thead>
+          <tbody id="tblVincoliBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ STAZIONI ═══════════════════════════════ -->
+  <div id="tab-stazioni" class="tab-pane">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Progetto:</label>
+        <select id="filtProjSt" onchange="renderStazioni()">
+          <option value="">Tutti</option>
+          {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+        </select>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>WIP per Stazione di Lavoro</h3>
+      <div id="stationsViz" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ DETTAGLIO ═══════════════════════════════ -->
+  <div id="tab-dettaglio" class="tab-pane">
+    <!-- hidden select mantenuto per compatibilità con renderDettaglio() -->
+    <select id="filtProjDet" style="display:none">
+      {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+    </select>
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border)">
+      <div style="display:flex;gap:0;flex:1">
+        {"".join(f'''<button class="inv-tab-btn{' active' if i==0 else ''}" data-proj="{p}"
+          onclick="setInvTab(this)"
+          style="padding:9px 22px;border:none;background:none;color:{'var(--text)' if i==0 else 'var(--muted)'};
+                 font-size:.92rem;cursor:pointer;border-bottom:{'2px solid var(--accent)' if i==0 else '2px solid transparent'};
+                 font-weight:{'600' if i==0 else '400'};transition:all .15s;margin-bottom:-2px">
+          {p}</button>''' for i,p in enumerate(projects.keys()))}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+        <input type="text" id="filtSearchDet" placeholder="Cerca componente..." oninput="renderDettaglio()"
+          style="background:var(--card2);border:1px solid var(--border);color:var(--text);
+                 border-radius:6px;padding:6px 10px;font-size:.82rem;width:180px">
+        <button id="printDetBtn" class="btn secondary" onclick="window.print()">🖨️</button>
+        <button id="detEditBtn" class="btn secondary" onclick="toggleDetEdit()">✏️ Modifica</button>
+        <button id="detSaveBtn" class="btn" onclick="saveInventory()" style="display:none">💾 Salva</button>
+        <button id="detResetBtn" class="btn secondary" onclick="resetDetEdit()" style="display:none">↺</button>
+      </div>
+    </div>
+    <div id="detChangedBanner" style="display:none;background:rgba(255,193,7,.1);border:1px solid var(--yellow);border-radius:8px;padding:9px 14px;font-size:.82rem;color:var(--yellow);margin-bottom:14px">
+      ✏️ <span id="detChangedCount">0</span> modifiche non salvate — clicca <strong>Salva</strong> per ricalcolare.
+    </div>
+    <div id="dettaglioCards"></div>
+  </div>
+
+  <!-- ═══════════════════════════════ P-NUM FLOW ═══════════════════════════════ -->
+  <div id="tab-pnum" class="tab-pane">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Progetto:</label>
+        <select id="filtProjPnum" onchange="renderPnumFlow()">
+          <option value="">Tutti</option>
+          {"".join(f'<option value="{p}">{p}</option>' for p in projects.keys())}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Cerca:</label>
+        <input type="text" id="filtSearchPnum" placeholder="Cerca Part Number..." oninput="renderPnumFlow()">
+      </div>
+      <div style="margin-left:auto; font-size:.78rem; color:var(--muted)">
+        📊 <span style="color:var(--accent); font-weight:700">Sync SAP:</span> Incrocio attivato su colonna <strong>"Fino"</strong>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="tbl-wrap" style="max-height: calc(100vh - 250px); overflow: auto; border: 1px solid var(--border); border-radius: 8px;">
+        <table id="tblPnum" style="font-size: 0.68rem; white-space: nowrap; border-collapse: separate; border-spacing: 0;">
+          <thead id="tblPnumHead" style="position: sticky; top: 0; z-index: 100; background: var(--card2);">
+            <!-- Generato da JS -->
+          </thead>
+          <tbody id="tblPnumBody">
+            <!-- Generato da JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SAP IMPORT ═══════════════════════════════ -->
+  <div id="tab-sap" class="tab-pane">
+    <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">
+        Seleziona uno o più file da aggiornare — solo i file scelti verranno sovrascritti, gli altri rimangono invariati.
+      </p>
+
+      <div class="import-grid">
+
+        <!-- SAP ZPP093 -->
+        <div class="import-slot {zpp_cls}" id="slot_sap_zpp">
+          <span class="import-slot-type">SAP Export</span>
+          <span class="import-slot-name">CONFERMESAP (.xlsx/.xls)</span>
+          <span class="import-slot-status {zpp_ok}">{zpp_txt}</span>
+          <span class="import-slot-chosen" id="lbl_sap_zpp"></span>
+          <input type="file" name="sap_zpp" id="f_sap_zpp" accept=".xlsx,.xls" style="display:none"
+                 onchange="setSlot(this,'lbl_sap_zpp','slot_sap_zpp')">
+          <button type="button" class="import-select-btn"
+                  onclick="document.getElementById('f_sap_zpp').click()">Scegli file</button>
+        </div>
+
+        <!-- SAP MB51 -->
+        <div class="import-slot {mb51_cls}" id="slot_sap_mb51">
+          <span class="import-slot-type">SAP Export</span>
+          <span class="import-slot-name">mb51 (.xlsx/.xls)</span>
+          <span class="import-slot-status {mb51_ok}">{mb51_txt}</span>
+          <span class="import-slot-chosen" id="lbl_sap_mb51"></span>
+          <input type="file" name="sap_mb51" id="f_sap_mb51" accept=".xlsx,.xls" style="display:none"
+                 onchange="setSlot(this,'lbl_sap_mb51','slot_sap_mb51')">
+          <button type="button" class="import-select-btn"
+                  onclick="document.getElementById('f_sap_mb51').click()">Scegli file</button>
+        </div>
+
+        <!-- BAP1 Mapping -->
+        <div class="import-slot {bap1_cls}" id="slot_bap1">
+          <span class="import-slot-type">Mapping</span>
+          <span class="import-slot-name">BAP1 (.xlsx/.xls)</span>
+          <span class="import-slot-status {bap1_ok}">{bap1_txt}</span>
+          <span class="import-slot-chosen" id="lbl_bap1"></span>
+          <input type="file" name="sap_mapping" id="f_bap1" accept=".xlsx,.xls" style="display:none"
+                 onchange="setSlot(this,'lbl_bap1','slot_bap1')">
+          <button type="button" class="import-select-btn"
+                  onclick="document.getElementById('f_bap1').click()">Scegli file</button>
+        </div>
+
+      </div>
+
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:4px">
+        <button type="button" class="upload-btn" onclick="submitUpload()">
+          ⬆ Aggiorna Dati Selezionati
+        </button>
+        <button type="button" class="upload-btn" onclick="clearData()"
+          style="background:transparent; border:1px solid var(--red); color:var(--red)">
+          🗑 Cancella Dati SAP
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══════════════════════════════ MAPPATURA SAP ═══════════════════════════════ -->
+  <div id="tab-mapping" class="tab-pane">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <div>
+        <h3 style="color:var(--accent)">🛠️ Configurazione Mappature SAP</h3>
+        <p style="font-size:.82rem;color:var(--muted)">Associa le stazioni della baseline ai codici operazione SAP (es. Op 90) e visualizza i materiali.</p>
+      </div>
+      <button class="btn" onclick="saveStationMapping()" id="btnSaveMapping">💾 Salva Mappature Stazioni</button>
+    </div>
+
+    <div class="grid-2">
+      <!-- Stazioni -->
+      <div class="chart-card">
+        <h3>Associazione Stazioni -> Operazioni SAP</h3>
+        <div class="tbl-wrap">
+          <table id="tblMapStations">
+            <thead>
+              <tr>
+                <th>Stazione Baseline</th>
+                <th style="width:250px">Operazioni SAP (es. 90, 80)</th>
+              </tr>
+            </thead>
+            <tbody id="tblMapStationsBody">
+              <!-- Renderizzato da JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Materiali -->
+      <div class="chart-card">
+        <h3>Materiali (Codici Hard/Soft)</h3>
+        <div class="tbl-wrap">
+          <table id="tblMapMaterials">
+            <thead>
+              <tr>
+                <th>Soft / S</th>
+                <th>Inter / T</th>
+                <th>Hard</th>
+              </tr>
+            </thead>
+            <tbody id="tblMapMaterialsBody">
+              <!-- Renderizzato da JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- ══ GESTIONE BASELINE ══ -->
+    <div class="chart-card" style="margin-top:20px; border-left:4px solid #ffc107">
+      <h3 style="color:#ffc107">📐 Gestione Baseline Inventario</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:20px">
+        La <strong>baseline</strong> è la fotografia fisica dell'inventario da cui parte il sistema.<br>
+        Puoi azzerarla (punto zero) oppure sostituirla con i valori attuali dopo un nuovo conteggio fisico.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <!-- Azzera Baseline -->
+        <div style="background:var(--card2);border:1px solid rgba(220,53,69,0.4);border-radius:12px;padding:18px">
+          <div style="font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--red);margin-bottom:8px;font-weight:700">⚠️ Punto Zero</div>
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:16px">
+            Azzera tutte le quantità fisiche (WIP + Finiti) portando ogni componente a 0.
+            I file SAP esistenti vengono ignorati nel ricalcolo.
+          </div>
+          <button type="button" id="btn-reset-baseline"
+            style="width:100%;background:transparent;border:1px solid var(--red);color:var(--red);padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.88rem;font-weight:700"
+            onclick="resetBaseline()">
+            🔄 Azzera Baseline (Punto Zero)
+          </button>
+        </div>
+
+        <!-- Salva come Nuova Baseline -->
+        <div style="background:var(--card2);border:1px solid rgba(40,167,69,0.4);border-radius:12px;padding:18px">
+          <div style="font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--green);margin-bottom:8px;font-weight:700">✅ Nuovo Inventario</div>
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">
+            Salva <strong>i valori attuali</strong> come nuova baseline.
+            Usa dopo un conteggio fisico + aggiornamento manuale nelle stazioni.
+          </div>
+          <input type="text" id="baseline-date" placeholder="Data inventario (es. 2026-04-05)"
+            value="{today_str}"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 12px;font-size:.84rem;margin-bottom:10px">
+          <button type="button" id="btn-save-baseline"
+            style="width:100%;background:var(--green);color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.88rem;font-weight:700"
+            onclick="saveBaseline()">
+            💾 Salva come Nuova Baseline
+          </button>
+        </div>
+      </div>
+      <div id="baseline-msg" style="font-size:.82rem;color:var(--muted);margin-top:12px;min-height:20px"></div>
+    </div>
+
+    <script>
+    function setSlot(input, labelId, slotId) {{
+      const lbl  = document.getElementById(labelId);
+      const slot = document.getElementById(slotId);
+      if (input.files.length > 0) {{
+        lbl.textContent = input.files[0].name;
+        slot.classList.add('selected');
+      }} else {{
+        lbl.textContent = '';
+        slot.classList.remove('selected');
+      }}
+    }}
+    function submitUpload() {{
+      const inputs = document.querySelectorAll('#uploadForm input[type=file]');
+      const hasFile = Array.from(inputs).some(i => i.files.length > 0);
+      if (!hasFile) {{ alert('Seleziona almeno un file prima di procedere.'); return; }}
+      const loader = document.createElement('div');
+      loader.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:sans-serif";
+      loader.innerHTML = '<div style="font-size:3rem;margin-bottom:20px">⏳</div><div>Elaborazione dati in corso...</div>';
+      document.body.appendChild(loader);
+      document.getElementById('uploadForm').submit();
+    }}
+    function clearData() {{
+      if (!confirm("⚠️ Cancellare tutti i dati SAP caricati e le modifiche manuali?\\n\\nI dati baseline rimarranno intatti.\\nL'operazione non è reversibile.")) return;
+      fetch('/clear-data', {{ method: 'POST' }})
+        .then(r => r.json())
+        .then(d => {{ alert('✅ ' + d.message + '\\n\\nLa dashboard è tornata alla baseline.'); location.reload(); }})
+        .catch(() => alert('Errore durante la cancellazione.'));
+    }}
+    function _baselineLoader(msg) {{
+      const el = document.getElementById('baseline-msg');
+      el.textContent = '⏳ ' + msg;
+      el.style.color = 'var(--yellow)';
+    }}
+    function _baselineDone(msg, ok) {{
+      const el = document.getElementById('baseline-msg');
+      el.textContent = (ok ? '✅ ' : '❌ ') + msg;
+      el.style.color = ok ? 'var(--green)' : 'var(--red)';
+    }}
+    function resetBaseline() {{
+      if (!confirm("⚠️ PUNTO ZERO: Azzerare TUTTI i dati di inventario?\\n\\nQuesta operazione porta tutte le quantità (WIP e Finiti) a 0.\\nViene creato un backup automatico prima di procedere.\\n\\nContinuare?")) return;
+      _baselineLoader('Azzeramento in corso...');
+      document.getElementById('btn-reset-baseline').disabled = true;
+      fetch('/reset-baseline', {{ method: 'POST', headers: {{'Content-Type':'application/json'}}, body: '{{}}' }})
+        .then(r => r.json())
+        .then(d => {{
+          _baselineDone(d.message, d.message && !d.message.includes('Errore'));
+          document.getElementById('btn-reset-baseline').disabled = false;
+          setTimeout(() => location.reload(), 2000);
+        }})
+        .catch(e => {{ _baselineDone('Errore di rete: ' + e, false); document.getElementById('btn-reset-baseline').disabled = false; }});
+    }}
+    function saveBaseline() {{
+      const dateLabel = document.getElementById('baseline-date').value.trim();
+      if (!dateLabel) {{ alert('Inserisci la data del conteggio fisico.'); return; }}
+      if (!confirm(`💾 Salvare i valori ATTUALI come nuova baseline?\\n\\nData: ${{dateLabel}}\\n\\nViene creato un backup della baseline precedente.\\n\\nContinuare?`)) return;
+      _baselineLoader('Salvataggio nuova baseline...');
+      document.getElementById('btn-save-baseline').disabled = true;
+      fetch('/save-baseline', {{ method: 'POST', headers: {{'Content-Type':'application/json'}}, body: JSON.stringify({{label: dateLabel}}) }})
+        .then(r => r.json())
+        .then(d => {{
+          _baselineDone(d.message, d.message && !d.message.includes('Errore'));
+          document.getElementById('btn-save-baseline').disabled = false;
+          setTimeout(() => location.reload(), 2000);
+        }})
+        .catch(e => {{ _baselineDone('Errore di rete: ' + e, false); document.getElementById('btn-save-baseline').disabled = false; }});
+    }}
+    </script>
+
+    <div class="chart-card" style="margin-top:20px">
+      <h3>Target Giornalieri</h3>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
+        Imposta il volume giornaliero per ogni progetto. Sovrascrive il valore letto dall'Excel.
+      </p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px">⚡ DCT Eco</label>
+          <input type="number" id="t_dct_eco" class="mod-input" min="0" placeholder="pz/gg" style="width:100%">
+        </div>
+        <div>
+          <label style="display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px">🔵 8Fe (Sirius)</label>
+          <input type="number" id="t_8fe" class="mod-input" min="0" placeholder="pz/gg" style="width:100%">
+        </div>
+        <div>
+          <label style="display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px">🟣 DCT 300</label>
+          <input type="number" id="t_dct300" class="mod-input" min="0" placeholder="pz/gg" style="width:100%">
+        </div>
+      </div>
+      <button class="btn" onclick="saveTargets()">💾 Salva Target e Ricalcola</button>
+    </div>
+
+    <div class="chart-card" style="margin-top:20px">
+      <h3>Formato atteso colonne SAP</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>File</th><th>Colonna Materiale</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>zpp_093.xlsx</td><td>Materiale / MATNR</td><td>Ordini aperti (WIP ordini)</td></tr>
+            <tr><td>mb51.xlsx</td><td>Materiale / MATNR</td><td>Movimenti Magazzino</td></tr>
+            <tr><td>Inventari (.xlsx)</td><td>-</td><td>Stock / WIP manuale</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ ARCHIVIO ═══════════════════════════════ -->
+  <div id="tab-archivio" class="tab-pane">
+
+    <!-- Config panel -->
+    <details id="archiveCfgPanel" style="margin-bottom:18px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 18px">
+      <summary style="cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted);list-style:none;display:flex;align-items:center;gap:8px">
+        ⚙️ Configurazione archivio
+        <span id="archiveCfgMode" style="font-weight:400;font-size:.8rem;margin-left:auto"></span>
+      </summary>
+      <div style="margin-top:14px">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button id="cfgBtnLocal"    class="btn" onclick="setCfgMode('local')"    style="flex:1">💾 Locale</button>
+          <button id="cfgBtnSupabase" class="btn" onclick="setCfgMode('supabase')" style="flex:1">☁️ Supabase</button>
+        </div>
+        <div id="cfgSupabaseFields" style="display:none">
+          <form onsubmit="return false" style="margin:0">
+            <div style="display:grid;gap:8px;margin-bottom:10px">
+              <input id="cfgUrl"   type="text" placeholder="Supabase URL  (es. https://xxx.supabase.co)"
+                style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 12px;font-size:.85rem;width:100%">
+              <input id="cfgKey"   type="password" placeholder="Anon key" autocomplete="current-password"
+                style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 12px;font-size:.85rem;width:100%">
+              <input id="cfgTable" type="text" placeholder="Nome tabella (default: bap_archivio)"
+                style="background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 12px;font-size:.85rem;width:100%">
+            </div>
+          </form>
+          <details style="margin-bottom:10px">
+            <summary style="cursor:pointer;font-size:.8rem;color:var(--muted)">SQL per creare la tabella</summary>
+            <pre style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:10px;font-size:.75rem;overflow-x:auto;margin-top:6px;color:var(--text)">create table bap_archivio (
+  id         uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  label      text,
+  kpi        jsonb,
+  componenti jsonb
+);
+alter table bap_archivio enable row level security;
+create policy "anon all" on bap_archivio for all using (true) with check (true);</pre>
+          </details>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="btn" onclick="saveArchiveConfig()" style="white-space:nowrap">✅ Salva e Testa</button>
+          <span id="cfgMsg" style="font-size:.83rem;color:var(--muted)"></span>
+        </div>
+      </div>
+    </details>
+
+    <!-- Save row -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px">
+        <input type="text" id="archiveLabel" placeholder="Etichetta snapshot (es. Fine settimana, Post emergenza...)"
+          style="width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+                 border-radius:8px;padding:9px 14px;font-size:.88rem">
+      </div>
+      <button class="btn" onclick="saveArchive()" style="white-space:nowrap">💾 Archivia Stato Attuale</button>
+    </div>
+    <div id="archiveTimeline"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ═══ MODAL ARCHIVIO ═══ -->
+<div id="archiveModal" class="modal-overlay" onclick="if(event.target===this)closeArchiveModal()">
+  <div class="modal-box" style="width:min(1100px,97vw);max-height:88vh">
+    <div class="modal-header">
+      <span class="modal-title" id="archiveModalTitle">Snapshot</span>
+      <button class="modal-close" onclick="closeArchiveModal()">✕</button>
+    </div>
+    <div class="modal-body" id="archiveModalBody"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL KPI ═══ -->
+<div id="kpiModal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body tbl-wrap">
+      <table id="modalTable" style="margin-top:12px">
+        <thead>
+          <tr>
+            <th>Progetto</th>
+            <th>Componente</th>
+            <th>Codice</th>
+            <th class="num">WIP</th>
+            <th class="num">Finiti</th>
+            <th class="num">Cop. (gg)</th>
+            <th>Stato</th>
+          </tr>
+        </thead>
+        <tbody id="modalBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {data_js};
+const components = DATA.components;
+const kpi = DATA.kpi;
+const RACK_SIZES = DATA.rack_sizes || {{}};
+
+// ─── Dark / Light theme ───
+(function() {{
+  const saved = localStorage.getItem('bap-theme');
+  if (saved === 'light') {{ document.documentElement.classList.add('light'); }}
+}})();
+function toggleTheme() {{
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('bap-theme', isLight ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isLight ? '🌙 Dark' : '☀️ Light';
+}}
+// Imposta label iniziale
+document.addEventListener('DOMContentLoaded', function() {{
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = document.documentElement.classList.contains('light') ? '🌙 Dark' : '☀️ Light';
+}});
+
+// Parsa numeri con virgola decimale italiana: "1,5" → 1.5, "1500" → 1500
+function _parseNum(val) {{ return parseFloat(('' + val).replace(',', '.')) || 0; }}
+function _parseInt(val)  {{ return Math.round(_parseNum(val)); }}
+let sortDir = {{}};
+
+// ─── Tab switching ───
+function switchTab(name, btn) {{
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'stazioni') renderStazioni();
+  if (name === 'matrix') renderMatrix();
+  if (name === 'dettaglio') {{
+    // seleziona primo tab progetto se nessuno attivo
+    const first = document.querySelector('.inv-tab-btn.active') || document.querySelector('.inv-tab-btn');
+    if (first) setInvTab(first);
+    else renderDettaglio();
+  }}
+  if (name === 'mapping') renderMapping();
+  if (name === 'vincoli') renderVincoli();
+  if (name === 'pnum') renderPnumFlow();
+  if (name === 'archivio') {{ loadArchiveConfig(); loadArchiveList(); }}
+}}
+
+// ─── OVERVIEW & BAP FILTERING ───
+let currentBap = 'BAP3';
+let chartCovInst, chartSemInst, chartStInst;
+let _lastFilteredComps = [];
+
+function getReparti(c) {{
+  // BAP1 = componenti presenti nella mappatura SAP (BAP1.xlsx)
+  // BAP2 = tutto il resto
+  // BAP3 = tutti i codici (sempre incluso)
+  const mapping = DATA.mapping?.materiali || {{}};
+  const hardKey = (c.codice_hard || '').trim();
+  const softKey = (c.codice_s || '').replace(/\/[sS]$/, '').trim();
+  const inBap1 = (hardKey && hardKey in mapping) || (softKey && softKey in mapping);
+  return inBap1 ? ['BAP3', 'BAP1'] : ['BAP3', 'BAP2'];
+}}
+
+function setInvTab(btn, doRender=true) {{
+  document.querySelectorAll('.inv-tab-btn').forEach(b => {{
+    b.style.borderBottomColor = 'transparent';
+    b.style.color = 'var(--muted)';
+    b.style.fontWeight = '400';
+    b.classList.remove('active');
+  }});
+  btn.style.borderBottomColor = 'var(--accent)';
+  btn.style.color = 'var(--text)';
+  btn.style.fontWeight = '600';
+  btn.classList.add('active');
+  document.getElementById('filtProjDet').value = btn.dataset.proj;
+  if (doRender) renderDettaglio();
+}}
+
+function setBap(bap, btn) {{
+  document.querySelectorAll('.bap-btn').forEach(b => {{
+    b.style.background = 'transparent';
+    b.style.color = 'var(--muted)';
+  }});
+  btn.style.background = 'var(--card2)';
+  btn.style.color = 'white';
+  currentBap = bap;
+  renderOverview();
+}}
+
+function renderOverview() {{
+  const filteredComps = components.filter(c => getReparti(c).includes(currentBap));
+  _lastFilteredComps = filteredComps;
+  
+  // 1. KPI
+  const kpiMap = {{}};
+  filteredComps.forEach(c => {{
+    const p = c.progetto;
+    if (!kpiMap[p]) kpiMap[p] = {{ n_comp:0, finiti:0, wip:0, rossi:0, gialli:0, verdi:0 }};
+    kpiMap[p].n_comp++;
+    kpiMap[p].finiti += (c.finiti || 0);
+    kpiMap[p].wip += (c.tot_wip || 0);
+    if (c.semaforo === 'rosso') kpiMap[p].rossi++;
+    else if (c.semaforo === 'giallo') kpiMap[p].gialli++;
+    else kpiMap[p].verdi++;
+  }});
+
+  const pColors = {{ 'DCT Eco': '#4f8ef7', '8Fe': '#ce93d8', 'DCT 300': '#4dd0e1' }};
+  const pIcons = {{ 'DCT Eco': '⚡', '8Fe': '🔵', 'DCT 300': '🟣' }};
+
+  // ─── Target giornalieri ───
+  const targetMap = {{}};
+  filteredComps.forEach(c => {{
+    if (!targetMap[c.progetto]) targetMap[c.progetto] = new Set();
+    if ((c.demand_fd1 || 0) > 0) targetMap[c.progetto].add(c.demand_fd1);
+  }});
+  const projOrder = ['DCT Eco', '8Fe', 'DCT 300'];
+  document.getElementById('targetBoxesContainer').innerHTML = projOrder.map(proj => {{
+    const color = pColors[proj] || '#8892a4';
+    const icon = pIcons[proj] || '🔹';
+    const vals = Array.from(targetMap[proj] || []).sort((a,b) => a-b);
+    const label = vals.length === 0 ? '—'
+      : vals.length === 1 ? vals[0].toLocaleString()
+      : vals.map(v => v.toLocaleString()).join(' / ');
+    return `<div class="target-box" style="border-left-color:${{color}}">
+      <span class="t-proj">${{icon}} ${{proj}}</span>
+      <span class="t-value" style="color:${{color}}">${{label}}</span>
+      <span class="t-unit">pz / giorno</span>
+    </div>`;
+  }}).join('');
+
+  document.getElementById('overviewKpiContainer').innerHTML = Object.entries(kpiMap).map(([proj, k]) => {{
+    const color = pColors[proj] || '#8892a4';
+    const icon = pIcons[proj] || '🔹';
+    return `
+    <div style="margin-bottom:20px">
+      <h2 style="font-size:1rem;color:${{color}};font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid ${{color}}">
+        ${{icon}} Progetto ${{proj}}
+      </h2>
+      <div class="kpi-row">
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="all" title="Clicca per vedere i componenti"><div class="label">Componenti</div><div class="value blue">${{k.n_comp}}</div></div>
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="finiti" title="Clicca per vedere i dettagli"><div class="label">Finiti totali</div><div class="value blue">${{Math.round(k.finiti).toLocaleString()}}</div></div>
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="wip" title="Clicca per vedere i dettagli"><div class="label">WIP totale</div><div class="value">${{Math.round(k.wip).toLocaleString()}}</div></div>
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="rosso" title="Clicca per vedere i critici"><div class="label">🔴 Critici</div><div class="value red">${{k.rossi}}</div></div>
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="giallo" title="Clicca per vedere in attenzione"><div class="label">🟡 Attenzione</div><div class="value yellow">${{k.gialli}}</div></div>
+        <div class="kpi-card" data-proj="${{proj}}" data-filter="verde" title="Clicca per vedere gli OK"><div class="label">🟢 OK</div><div class="value green">${{k.verdi}}</div></div>
+      </div>
+    </div>`;
+  }}).join('');
+
+  // 2. Chart Copertura (Solo finiti, come richiesto dall'utente)
+  const covData = filteredComps.filter(c => (c.gg_copertura_finiti || 0) > 0)
+    .sort((a,b) => (a.gg_copertura_finiti || 0) - (b.gg_copertura_finiti || 0)).slice(0, 30);
+  
+  const covLabels = covData.map(c => `${{c.famiglia}} - ${{c.progetto}}`);
+  const covValues = covData.map(c => c.gg_copertura_finiti || 0);
+  const covColors = covData.map(c =>
+    c.semaforo==='rosso' ? 'rgba(220,53,69,0.8)' :
+    c.semaforo==='giallo' ? 'rgba(255,193,7,0.85)' : 'rgba(40,167,69,0.75)'
+  );
+  if (chartCovInst) {{
+    chartCovInst.data.labels = covLabels;
+    chartCovInst.data.datasets[0].data = covValues;
+    chartCovInst.data.datasets[0].backgroundColor = covColors;
+    chartCovInst.update('none');
+  }} else {{
+    chartCovInst = new Chart(document.getElementById('chartCov'), {{
+      type: 'bar',
+      data: {{
+        labels: covLabels,
+        datasets: [{{
+          label: 'Giorni copertura',
+          data: covValues,
+          backgroundColor: covColors,
+          borderRadius: 4,
+        }}]
+      }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ display: false }} }},
+        scales: {{
+          x: {{ ticks: {{ color: '#8892a4', font: {{ size: 10 }}, maxRotation: 60 }}, grid: {{ color: '#2d3147' }} }},
+          y: {{ ticks: {{ color: '#8892a4' }}, grid: {{ color: '#2d3147' }}, title: {{ display: true, text: 'Giorni', color: '#8892a4' }} }}
+        }}
+      }}
+    }});
+  }}
+
+  // 3. Chart Semafori
+  const semData = Object.entries(kpiMap).map(([proj, k]) => ({{proj, rossi: k.rossi, gialli: k.gialli, verdi: k.verdi}}));
+  if (chartSemInst) {{
+    chartSemInst.data.labels = semData.map(s => s.proj);
+    chartSemInst.data.datasets[0].data = semData.map(s => s.rossi);
+    chartSemInst.data.datasets[1].data = semData.map(s => s.gialli);
+    chartSemInst.data.datasets[2].data = semData.map(s => s.verdi);
+    chartSemInst.update('none');
+  }} else {{
+    chartSemInst = new Chart(document.getElementById('chartSemafori'), {{
+      type: 'bar',
+      data: {{
+        labels: semData.map(s => s.proj),
+        datasets: [
+          {{ label: '🔴 Critico', data: semData.map(s=>s.rossi),  backgroundColor: 'rgba(220,53,69,0.8)',  borderRadius: 4 }},
+          {{ label: '🟡 Attenzione', data: semData.map(s=>s.gialli), backgroundColor: 'rgba(255,193,7,0.85)', borderRadius: 4 }},
+          {{ label: '🟢 OK',      data: semData.map(s=>s.verdi),  backgroundColor: 'rgba(40,167,69,0.75)', borderRadius: 4 }},
+        ]
+      }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ labels: {{ color: '#8892a4' }} }} }},
+        scales: {{ x: {{ stacked: true, ticks: {{ color:'#8892a4' }}, grid: {{ color:'#2d3147' }} }}, y: {{ stacked: true, ticks: {{ color:'#8892a4' }}, grid: {{ color:'#2d3147' }} }} }}
+      }}
+    }});
+  }}
+
+  // 4. Chart Stazioni
+  const stMap = {{}};
+  filteredComps.forEach(c => {{
+    Object.entries(c.stazioni||{{}}).forEach(([st,data]) => {{
+      const q = typeof data === 'object' ? (data.qty||0) : data;
+      const k = st.substring(0,25);
+      stMap[k] = (stMap[k]||0) + q;
+    }});
+  }});
+  const stSorted = Object.entries(stMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  if (chartStInst) {{
+    chartStInst.data.labels = stSorted.map(s=>s[0]);
+    chartStInst.data.datasets[0].data = stSorted.map(s=>s[1]);
+    chartStInst.update('none');
+  }} else {{
+    chartStInst = new Chart(document.getElementById('chartStazioni'), {{
+      type: 'bar',
+      data: {{
+        labels: stSorted.map(s=>s[0]),
+        datasets: [{{ label: 'Pezzi in WIP', data: stSorted.map(s=>s[1]), backgroundColor: 'rgba(79,142,247,0.75)', borderRadius: 4 }}]
+      }},
+      options: {{
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ display: false }} }},
+        scales: {{ x: {{ ticks: {{ color:'#8892a4' }}, grid: {{ color:'#2d3147' }} }}, y: {{ ticks: {{ color:'#8892a4', font: {{ size: 11 }} }}, grid: {{ color:'#2d3147' }} }} }}
+      }}
+    }});
+  }}
+}}
+renderOverview();
+
+// ─── Click delegato KPI cards ───
+document.getElementById('overviewKpiContainer').addEventListener('click', function(e) {{
+  const card = e.target.closest('.kpi-card');
+  if (card && card.dataset.proj) {{
+    openKpiModal(card.dataset.proj, card.dataset.filter || 'all');
+  }}
+}});
+
+// ─── Tabella Priorità ───
+function renderPriorityTable(data) {{
+  const tbody = document.getElementById('tblPriorityBody');
+  tbody.innerHTML = data.map((c, i) => {{
+    const gg = c.gg_copertura_wip_fin || 0;
+    const delta = c.delta_finiti || 0;
+    const projCls = 'proj-' + c.progetto.toLowerCase().replace(/[\s\/]/g, '');
+    const cod = c.codice_s || c.codice_hard || c.label;
+    return `<tr>
+      <td>${{i+1}}</td>
+      <td><span class="badge ${{projCls}}">${{c.progetto}}</span></td>
+      <td>${{c.famiglia}}</td>
+      <td style="font-size:.82rem;max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${{cod}}</td>
+      <td class="num">${{gg.toFixed(2)}}</td>
+      <td class="num">${{Math.round(c.finiti||0).toLocaleString()}}</td>
+      <td class="num">${{Math.round(c.tot_wip||0).toLocaleString()}}</td>
+      <td class="num ${{delta<0?'neg':'pos'}}">${{Math.round(delta).toLocaleString()}}</td>
+      <td><span class="badge ${{c.semaforo||'verde'}}">${{
+        c.semaforo==='rosso'  ? '🔴 Critico' :
+        c.semaforo==='giallo' ? '🟡 Attenzione' : '🟢 OK'
+      }}</span></td>
+    </tr>`;
+  }}).join('');
+}}
+
+function filterPriority() {{
+  const proj  = document.getElementById('filtProjPrio').value;
+  const sem   = document.getElementById('filtSemPrio').value;
+  const srch  = document.getElementById('filtSearchPrio').value.toLowerCase();
+  const filt  = components
+    .filter(c => c.gg_copertura_wip_fin > 0)
+    .filter(c => !proj || c.progetto === proj)
+    .filter(c => !sem  || c.semaforo === sem)
+    .filter(c => !srch || c.label.toLowerCase().includes(srch) || c.famiglia.toLowerCase().includes(srch))
+    .sort((a,b) => (a.display_order ?? 9999) - (b.display_order ?? 9999));
+  renderPriorityTable(filt);
+}}
+filterPriority(); // init
+
+// ─── Stazioni ───
+function renderStazioni() {{
+  const proj = document.getElementById('filtProjSt').value;
+  const filtered = proj ? components.filter(c => c.progetto===proj) : components;
+  const stM = {{}};
+  filtered.forEach(c => {{
+    Object.entries(c.stazioni||{{}}).forEach(([st,data]) => {{
+      const q = typeof data === 'object' ? (data.qty||0) : data;
+      stM[st] = (stM[st]||0) + q;
+    }});
+  }});
+  const sorted = Object.entries(stM).sort((a,b)=>b[1]-a[1]);
+  const max = sorted[0]?.[1] || 1;
+  const cont = document.getElementById('stationsViz');
+  cont.innerHTML = sorted.map(([st,qty]) => `
+    <div class="station-bar">
+      <div class="station-name">${{st.substring(0,25)}}</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${{(qty/max*100).toFixed(1)}}%"></div></div>
+      <div class="station-qty">${{qty.toLocaleString()}}</div>
+    </div>`).join('');
+}}
+
+// ─── Vincoli (Bottlenecks) ───
+function renderVincoli() {{
+  const proj = document.getElementById('filtProjVincoli').value;
+  const srch = document.getElementById('filtSearchVincoli').value.toLowerCase();
+  
+  // 1. Calcolo Globale Criticità Stazioni (sempre su tutti i componenti per avere il contesto reale)
+  const globalStMap = {{}}; 
+  components.forEach(c => {{
+    const dailyTarget = c.demand_fd1 || 0;
+    Object.entries(c.stazioni || {{}}).forEach(([st, data]) => {{
+      const qty = typeof data === 'object' ? (data.qty || 0) : data;
+      if (!globalStMap[st]) globalStMap[st] = {{ wip: 0, target: 0 }};
+      globalStMap[st].wip += qty;
+      if (qty > 0) globalStMap[st].target += dailyTarget;
+    }});
+  }});
+  
+  // Calcola indice per stazione
+  const stationIndices = {{}};
+  Object.entries(globalStMap).forEach(([st, data]) => {{
+    stationIndices[st] = data.target > 0 ? (data.wip / data.target) : 0;
+  }});
+
+  // 2. Analisi per Componente
+  const filtered = components
+    .filter(c => !proj || c.progetto === proj)
+    .filter(c => !srch || c.label.toLowerCase().includes(srch) || c.famiglia.toLowerCase().includes(srch));
+
+  const compVincoli = filtered.map(c => {{
+    let worstSt = '-';
+    let worstIdx = 0;
+    
+    // Trova la peggiore stazione nel flusso di QUESTO componente
+    Object.keys(c.stazioni || {{}}).forEach(st => {{
+      const idx = stationIndices[st] || 0;
+      if (idx > worstIdx) {{
+        worstIdx = idx;
+        worstSt = st;
+      }}
+    }});
+    
+    return {{
+      ...c,
+      bottleneckSt: worstSt,
+      bottleneckIdx: worstIdx
+    }};
+  }})
+  .filter(v => v.tot_wip > 0 || (v.bottleneckIdx > 0))
+  // Ordinamento per bottleneck peggiore
+  .sort((a, b) => b.bottleneckIdx - a.bottleneckIdx);
+
+  const body = document.getElementById('tblVincoliBody');
+  body.innerHTML = compVincoli.map(v => {{
+    let critClass = 'verde';
+    if (v.bottleneckIdx > 3) critClass = 'rosso';
+    else if (v.bottleneckIdx > 1) critClass = 'giallo';
+    
+    const cod = v.codice_s || v.codice_hard || v.label;
+
+    return `<tr>
+      <td><span style="font-weight:600">${{v.famiglia}}</span><br><span style="font-size:0.7rem; color:var(--muted)">${{v.progetto}}</span></td>
+      <td style="font-size:0.75rem">${{cod}}</td>
+      <td style="font-weight:600; color:var(--accent)">${{v.bottleneckSt}}</td>
+      <td class="num"><span class="badge ${{critClass}}">${{v.bottleneckIdx.toFixed(1)}} gg</span></td>
+      <td class="num">${{Math.round(v.tot_wip).toLocaleString()}}</td>
+      <td><span class="badge ${{v.semaforo||'verde'}}">${{v.semaforo==='rosso'?'🔴 Crit.':v.semaforo==='giallo'?'🟡 Att.':'🟢 OK'}}</span></td>
+    </tr>`;
+  }}).join('');
+}}
+
+
+// ─── P-NUM FLOW (Matrice Excel-style) ───
+function renderPnumFlow() {{
+  console.log("Rendering P-NUM Flow...");
+  const proj  = document.getElementById('filtProjPnum').value;
+  const srch  = document.getElementById('filtSearchPnum').value.toLowerCase();
+  const matrix = DATA.pnum_matrix || [];
+  
+  const filtered = matrix.filter(row => {{
+    if (proj && row.progetto !== proj) return false;
+    if (srch && !(row.p_number.toLowerCase().includes(srch) || row.famiglia.toLowerCase().includes(srch))) return false;
+    return true;
+  }});
+
+  const head = document.getElementById('tblPnumHead');
+  const body = document.getElementById('tblPnumBody');
+  if (!head || !body) return;
+
+  // Render Header (2 righe come Excel)
+  head.innerHTML = `
+    <tr>
+      <th rowspan="2" style="background:var(--card); border-right:2px solid var(--border); min-width:140px">Info BASE</th>
+      <th colspan="4" style="text-align:center; background:#1e3a8a; color:white; border-right:1px solid #ffffff33">START SOFT</th>
+      <th colspan="4" style="text-align:center; background:#1e40af; color:white; border-right:1px solid #ffffff33">END SOFT</th>
+      <th colspan="4" style="text-align:center; background:#5b21b6; color:white; border-right:1px solid #ffffff33">T. TERMICO (HT)</th>
+      <th colspan="4" style="text-align:center; background:#065f46; color:white; border-right:1px solid #ffffff33">START HARD</th>
+      <th colspan="4" style="text-align:center; background:#064e3b; color:white; border-right:1px solid #ffffff33">END HARD</th>
+      <th colspan="4" style="text-align:center; background:#991b1b; color:white">FINAL WASHING</th>
+    </tr>
+    <tr>
+      ${{Array(6).fill('<th>PN</th><th>Op</th><th>Lavorazione</th><th class="num">WIP (SAP)</th>').join('')}}
+    </tr>
+  `;
+
+  // Render Body
+  body.innerHTML = filtered.map(row => {{
+    const cells = row.fasi.map((f, idx) => `
+      <td style="color:var(--muted); font-size:0.62rem">${{f.pn}}</td>
+      <td style="font-weight:700; color:var(--accent)">${{f.op}}</td>
+      <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; font-size:0.65rem; border-right:1px solid rgba(255,255,255,0.05)" title="${{f.name}}">${{f.name}}</td>
+      <td class="num" style="background:rgba(255,255,255,0.03); font-weight:800; color:${{f.wip>0?'var(--yellow)':'var(--muted)'}}; border-right:1px solid var(--border)">${{f.wip > 0 ? f.wip.toLocaleString() : '-'}}</td>
+    `).join('');
+
+    return `<tr>
+      <td style="border-right:2px solid var(--border); background:rgba(255,255,255,0.02)">
+        <div style="font-weight:700; font-size:0.75rem">${{row.p_number}}</div>
+        <div style="font-size:0.6rem; color:var(--muted)">${{row.progetto}} | ${{row.famiglia}}</div>
+      </td>
+      ${{cells}}
+    </tr>`;
+  }}).join('');
+}}
+
+// ─── Dettaglio componenti ───
+let _detEditMode = false;
+let _modData = {{}};
+
+function toggleDetEdit() {{
+  _detEditMode = !_detEditMode;
+  const btn = document.getElementById('detEditBtn');
+  btn.textContent = _detEditMode ? '✕ Esci' : '✏️ Modifica';
+  btn.className = _detEditMode ? 'btn' : 'btn secondary';
+  document.getElementById('detSaveBtn').style.display = _detEditMode ? '' : 'none';
+  document.getElementById('detResetBtn').style.display = _detEditMode ? '' : 'none';
+  if (!_detEditMode) {{ _modData = {{}}; _updateBanner(); }}
+  renderDettaglio();
+}}
+
+function resetDetEdit() {{
+  _modData = {{}};
+  _updateBanner();
+  renderDettaglio();
+}}
+
+function _updateBanner() {{
+  const n = Object.keys(_modData).length;
+  const banner = document.getElementById('detChangedBanner');
+  if (banner) {{
+    banner.style.display = n > 0 ? 'block' : 'none';
+    const span = document.getElementById('detChangedCount');
+    if (span) span.textContent = n;
+  }}
+  const saveBtn = document.getElementById('detSaveBtn');
+  if (saveBtn && _detEditMode) saveBtn.textContent = n > 0 ? `💾 Salva (${{n}})` : '💾 Salva';
+}}
+
+function renderDettaglio() {{
+  const proj = document.getElementById('filtProjDet').value;
+  const srch = document.getElementById('filtSearchDet').value.toLowerCase();
+  const filtered = components
+    .filter(c => !proj || c.progetto===proj)
+    .filter(c => !srch || c.label.toLowerCase().includes(srch) || c.famiglia.toLowerCase().includes(srch));
+  const cont = document.getElementById('dettaglioCards');
+  const pColors = {{'DCT Eco':'#4f8ef7','8Fe':'#ce93d8','DCT 300':'#4dd0e1'}};
+
+  function buildCard(c) {{
+    const col      = pColors[c.progetto] || '#8892a4';
+    const cardId   = c.display_order;
+    const key      = (c.progetto||'') + '||' + (c.label||'');
+    const keyEsc   = key.replace(/"/g,'&quot;');
+    const ov       = _modData[key] || {{}};
+    const finVal   = ov.finiti  !== undefined ? ov.finiti  : Math.round(c.finiti  || 0);
+    const wipVal   = ov.tot_wip !== undefined ? ov.tot_wip : Math.round(c.tot_wip || 0);
+    const gg       = c.gg_copertura_wip_fin || 0;
+    const stations = Object.entries(c.stazioni || {{}});
+    const modified = Object.keys(ov).length > 0;
+
+    const _valBox = (val, color) =>
+      `<div style="font-size:1.05rem;font-weight:700;color:${{color||'var(--text)'}};text-align:right;flex:1;display:flex;align-items:center;justify-content:flex-end">${{val.toLocaleString()}}</div>`;
+
+    const fBox = _detEditMode
+      ? `<input type="number" min="0" id="det-fin-${{cardId}}" value="${{finVal}}"
+           class="mod-input${{ov.finiti!==undefined?' changed':''}}"
+           style="width:100%;font-size:1.05rem;font-weight:700;color:${{col}}"
+           data-key="${{keyEsc}}" data-field="finiti"
+           onfocus="this.select()" oninput="updateModDet(this)">`
+      : _valBox(finVal, col);
+
+    const wBox = _detEditMode
+      ? `<input type="number" id="det-wip-${{cardId}}" value="${{wipVal}}"
+           class="mod-input${{ov.tot_wip!==undefined?' changed':''}}"
+           style="width:100%;font-size:1.05rem;font-weight:700${{stations.length?';opacity:.55;cursor:default':''}}"
+           ${{stations.length ? 'readonly' : `min="0" data-key="${{keyEsc}}" data-field="tot_wip" onfocus="this.select()" oninput="updateModDet(this)"`}}>`
+      : _valBox(wipVal, '');
+
+    // Flusso stazioni lineare (senza raggruppamento)
+    const stRows = stations.map(([st, data]) => {{
+      const q    = typeof data === 'object' ? (data.qty||0) : data;
+      const ops  = typeof data === 'object' ? (data.sap_ops||[]) : [];
+      const orig = typeof data === 'object' ? (data.origin||'Manuale') : 'Manuale';
+      const stOv = (ov.stazioni||{{}})[st];
+      const stV  = stOv !== undefined ? stOv : q;
+      const stE  = st.replace(/"/g,'&quot;');
+      
+      let origIcon = '📋';
+      if (orig === 'SAP') origIcon = '🔄';
+      else if (orig.includes('Avanzamento')) origIcon = '⏭️';
+
+      let qCell;
+      if (_detEditMode) {{
+        qCell = `<input type="number" min="0" value="${{stV}}"
+          class="mod-input${{stOv!==undefined?' changed':''}}" style="width:72px"
+          data-key="${{keyEsc}}" data-station="${{stE}}" data-cardid="${{cardId}}"
+          data-rack-size="0" onfocus="this.select()" oninput="updateStation(this)">`;
+      }} else {{
+        const disp = `<span style="color:${{stV>0?'var(--accent)':'var(--muted)'}}">${{stV===0?'-':stV.toLocaleString()}} pz</span>`;
+        qCell = `<div style="display:flex; align-items:center; gap:8px">
+                   <span title="Origine: ${{orig}}" style="font-size:0.75rem">${{origIcon}}</span>
+                   <span style="font-weight:600;text-align:right">${{disp}}</span>
+                 </div>`;
+      }}
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
+        <div style="display:flex;flex-direction:column">
+          <span style="color:${{stV>0?'var(--text)':'var(--muted)'}}">${{st}}</span>
+          ${{ops.length?`<span style="font-size:.62rem;color:var(--accent);opacity:0.8">SAP: ${{ops.join(', ')}}</span>`:''}}
+        </div>
+        ${{qCell}}
+      </div>`;
+    }}).join('');
+
+    return `<div id="det-card-${{cardId}}" style="background:var(--card);border:1px solid ${{modified?'var(--yellow)':'var(--border)'}};border-radius:12px;padding:16px;border-top:3px solid ${{col}}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div>
+          <div style="font-size:.75rem;color:var(--muted)">${{c.progetto}}</div>
+          <div style="font-size:.9rem;font-weight:600;margin-top:2px">${{c.famiglia}}</div>
+          <div style="font-size:.72rem;color:var(--accent);margin-top:2px">${{c.codice_s||'-'}}</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${{c.codice_hard||'-'}}</div>
+        </div>
+        <span id="det-badge-${{cardId}}" class="badge ${{c.semaforo||'verde'}}">${{gg.toFixed(1)}} gg</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--card2);border-radius:6px;padding:8px 10px;min-height:58px;display:flex;flex-direction:column">
+          <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;white-space:nowrap">FINITI</div>
+          <div style="flex:1;display:flex;align-items:center">${{fBox}}</div>
+        </div>
+        <div style="background:var(--card2);border-radius:6px;padding:8px 10px;min-height:58px;display:flex;flex-direction:column">
+          <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;white-space:nowrap">WIP TOTALE${{_detEditMode&&stations.length?' <span style="opacity:.45;font-size:.6rem">(auto)</span>':''}}</div>
+          <div style="flex:1;display:flex;align-items:center">${{wBox}}</div>
+        </div>
+      </div>
+      ${{stRows?`<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">FLUSSO PRODUZIONE</div>${{stRows}}`:''}}</div>`;
+  }}
+
+  // Raggruppa per progetto e applica grid diverso per ciascuno
+  const byProj = {{}};
+  filtered.forEach(c => {{ if (!byProj[c.progetto]) byProj[c.progetto] = []; byProj[c.progetto].push(c); }});
+  const projOrder = DATA.projects.filter(p => byProj[p]);
+
+  cont.innerHTML = projOrder.map(projName => {{
+    const comps = byProj[projName];
+    const n = comps.length;
+    let cols;
+    if (projName === 'DCT Eco') {{
+      cols = `repeat(${{n}}, 1fr)`;
+    }} else if (projName === '8Fe') {{
+      cols = `repeat(${{Math.ceil(n/2)}}, 1fr)`;
+    }} else {{
+      cols = `repeat(auto-fill, minmax(280px, 1fr))`;
+    }}
+    const prgEsc = projName.replace(/'/g,"\\'");
+    const header = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:4px">
+      <span style="font-size:.78rem;font-weight:600;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">${{projName}}</span>
+      <button onclick="saveProgettoArchive('${{prgEsc}}')"
+        style="background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;
+               font-size:.72rem;color:var(--muted);padding:2px 8px;white-space:nowrap">
+        📦 Archivia ${{projName}}
+      </button>
+    </div>`;
+    return header + `<div style="display:grid;grid-template-columns:${{cols}};gap:16px;margin-bottom:24px">${{comps.map(buildCard).join('')}}</div>`;
+  }}).join('');
+}}
+
+function updateStation(input) {{
+  const key      = input.dataset.key;
+  const st       = input.dataset.station;
+  const cardId   = input.dataset.cardid;
+  const stIdx    = input.dataset.stidx;
+  const entered  = _parseNum(input.value);
+  const qty      = Math.round(entered);
+
+  if (!_modData[key]) _modData[key] = {{}};
+  if (!_modData[key].stazioni) _modData[key].stazioni = {{}};
+  _modData[key].stazioni[st] = qty;
+  input.classList.add('changed');
+
+  // Ricalcola tot_wip da tutte le stazioni del componente
+  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
+  let total = 0;
+  if (comp) {{
+    Object.entries(comp.stazioni || {{}}).forEach(([stName, data]) => {{
+      const stOv = (_modData[key].stazioni || {{}})[stName];
+      const orig = typeof data === 'object' ? (data.qty||0) : data;
+      total += stOv !== undefined ? stOv : orig;
+    }});
+  }}
+  _modData[key].tot_wip = total;
+  const wipEl = document.getElementById(`det-wip-${{cardId}}`);
+  if (wipEl) wipEl.value = total;
+  _updateCardBadge(key, cardId);
+  _updateBanner();
+}}
+
+function updateModDet(input) {{
+  const key   = input.dataset.key;
+  const field = input.dataset.field;
+  if (!_modData[key]) _modData[key] = {{}};
+  _modData[key][field] = _parseInt(input.value);
+  input.classList.add('changed');
+  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
+  if (comp) _updateCardBadge(key, comp.display_order);
+  _updateBanner();
+}}
+
+function _updateCardBadge(key, cardId) {{
+  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
+  if (!comp || !(comp.demand_fd1 > 0)) return;
+  const ov  = _modData[key] || {{}};
+  const fin = ov.finiti  !== undefined ? ov.finiti  : Math.round(comp.finiti  || 0);
+  const wip = ov.tot_wip !== undefined ? ov.tot_wip : Math.round(comp.tot_wip || 0);
+  const ggWip = wip / comp.demand_fd1;
+  const ggFin = fin / comp.demand_fd1;
+  const sem   = ggFin <= 1 ? 'rosso' : ggFin <= 3 ? 'giallo' : 'verde';
+  const badge = document.getElementById(`det-badge-${{cardId}}`);
+  if (badge) {{ badge.textContent = ggWip.toFixed(1) + ' gg'; badge.className = 'badge ' + sem; }}
+}}
+
+// ─── Sort tabella ───
+function sortTable(tblId, col) {{
+  const k = tblId+'_'+col;
+  sortDir[k] = !sortDir[k];
+  const asc = sortDir[k];
+  const rows = Array.from(document.querySelector('#'+tblId+' tbody').rows);
+  rows.sort((a,b) => {{
+    const av = a.cells[col]?.textContent.trim() || '';
+    const bv = b.cells[col]?.textContent.trim() || '';
+    const an = parseFloat(av.replace(/[^0-9.-]/g,''));
+    const bn = parseFloat(bv.replace(/[^0-9.-]/g,''));
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  }});
+  const tbody = document.querySelector('#'+tblId+' tbody');
+  rows.forEach(r => tbody.appendChild(r));
+}}
+
+// ─── Nuovo Flusso (Live Matrix) ───
+function renderMatrix() {{
+  const proj = document.getElementById('filtProjMatrix').value;
+  const srch = document.getElementById('filtSearchMatrix').value.toLowerCase();
+  const filtered = components
+    .filter(c => !proj || c.progetto === proj)
+    .filter(c => !srch || c.label.toLowerCase().includes(srch) || c.famiglia.toLowerCase().includes(srch));
+
+  // Helper per tecnologia (identico al server)
+  function getTech(st) {{
+    const s = st.toLowerCase();
+    if (s.includes('hard') || s.includes('rettific') || s.includes('baa') || s.includes('finale')) return 'HARD';
+    if (s.includes('termico') || s.includes('trattamento') || s.includes('pallinatur')) return 'TERMICO';
+    if (s.includes('soft') || s.includes('tornitur') || s.includes('lavaggio') || s.includes('dentatur') || s.includes('saldatur')) return 'SOFT';
+    return 'ALTRO';
+  }}
+
+  // Raccogli tutte le stazioni uniche e raggruppale per tecnologia
+  const stationSet = new Set();
+  filtered.forEach(c => {{
+    Object.keys(c.stazioni || {{}}).forEach(st => stationSet.add(st));
+  }});
+  
+  const techGroups = {{ 'SOFT': [], 'TERMICO': [], 'HARD': [], 'ALTRO': [] }};
+  Array.from(stationSet).forEach(st => techGroups[getTech(st)].push(st));
+  
+  const allStations = [
+    ...techGroups['SOFT'],
+    ...techGroups['TERMICO'],
+    ...techGroups['HARD'],
+    ...techGroups['ALTRO']
+  ];
+
+  const techColors = {{
+    'SOFT':    'rgba(79,142,247,0.2)', // Blu
+    'TERMICO': 'rgba(206,147,216,0.2)', // Viola
+    'HARD':    'rgba(77,208,225,0.2)',  // Cyan
+    'ALTRO':   'rgba(136,146,164,0.1)'  // Grigio
+  }};
+
+  // Header con raggruppamento
+  const head = document.getElementById('tblMatrixHead');
+  let headHtml = `<tr>
+    <th rowspan="2" style="left:0; z-index:11; background:var(--card2); position:sticky">Componente / Famiglia</th>
+    <th rowspan="2" title="Finiti in inventario">Finiti</th>`;
+  
+  // Riga Tecnologie
+  ['SOFT', 'TERMICO', 'HARD'].forEach(t => {{
+    if (techGroups[t].length > 0)
+      headHtml += `<th colspan="${{techGroups[t].length}}" style="background:${{techColors[t]}}; border-bottom:1px solid var(--border); font-size:0.65rem; text-align:center">${{t}}</th>`;
+  }});
+  if (techGroups['ALTRO'].length > 0)
+     headHtml += `<th colspan="${{techGroups['ALTRO'].length}}" style="background:${{techColors['ALTRO']}}; font-size:0.65rem; text-align:center">ALTRO</th>`;
+  
+  headHtml += `</tr><tr>`;
+  
+  // Riga Stazioni
+  allStations.forEach(st => {{
+    const t = getTech(st);
+    headHtml += `<th title="${{st}}" style="font-size:0.55rem; padding:4px; background:${{techColors[t]}}">${{st.substring(0,12)}}</th>`;
+  }});
+  headHtml += `</tr>`;
+  head.innerHTML = headHtml;
+
+  // Body
+  const body = document.getElementById('tblMatrixBody');
+  body.innerHTML = filtered.map(c => {{
+    const rowColor = c.semaforo === 'rosso' ? 'rgba(220,53,69,0.05)' : 'transparent';
+    const cod = c.codice_s || c.codice_hard || c.label;
+    
+    return `<tr style="background:${{rowColor}}">
+      <td style="position:sticky; left:0; background:var(--card); font-weight:600; font-size:0.75rem; border-right:2px solid var(--border); white-space:nowrap">
+        ${{c.famiglia}} - <span style="font-size:0.65rem; color:var(--muted)">${{c.label}}</span>
+      </td>
+      <td class="num" style="background:rgba(79,142,247,0.05); font-weight:700; font-size:0.85rem">${{Math.round(c.finiti||0).toLocaleString()}}</td>
+      ${{allStations.map(st => {{
+        const data = c.stazioni[st];
+        if (!data) return `<td style="color:#333;text-align:center;border-right:1px solid var(--border)">.</td>`;
+        
+        const inv = typeof data === 'object' ? (data.qty||0) : data;
+        const sap = typeof data === 'object' ? (data.sap_qty||0) : 0;
+        const orig = data.origin || 'Physical';
+        
+        // Colore in base all'origine del dato
+        let stStyle = '';
+        if (orig === 'SAP') stStyle = 'background:rgba(79,142,247,0.15);';
+        else if (orig === 'Sync (Moved)') stStyle = 'background:rgba(220,53,69,0.05); opacity:0.4;';
+        
+        return `<td class="num" style="border-right:1px solid var(--border); ${{stStyle}} position:relative" title="Origine: ${{orig}}">
+          <div style="font-weight:700; color:${{inv>0?'var(--text)':'#555'}}">${{inv.toLocaleString()}}</div>
+          ${{sap > 0 ? `<div style="font-size:0.6rem; color:var(--accent)">S: ${{sap.toLocaleString()}}</div>` : ''}}
+          ${{orig === 'Sync (Moved)' ? `<div style="font-size:0.5rem; color:var(--red); font-weight:bold">MOVED</div>` : ''}}
+        </td>`;
+      }}).join('')}}
+    </tr>`;
+  }}).join('');
+}}
+
+// ─── Modal KPI ───
+function openKpiModal(proj, filter) {{
+  const titles = {{
+    all:    'Tutti i componenti',
+    finiti: 'Finiti per componente',
+    wip:    'WIP per componente',
+    rosso:  '🔴 Critici (≤1 gg)',
+    giallo: '🟡 Attenzione (1-3 gg)',
+    verde:  '🟢 OK (>3 gg)',
+  }};
+  let comps = _lastFilteredComps.filter(c => c.progetto === proj);
+  if      (filter === 'rosso')  comps = comps.filter(c => c.semaforo === 'rosso');
+  else if (filter === 'giallo') comps = comps.filter(c => c.semaforo === 'giallo');
+  else if (filter === 'verde')  comps = comps.filter(c => c.semaforo === 'verde');
+  // Ordina: semaforo ASC per copertura, oppure DESC per valore numerico
+  if (filter === 'finiti') comps = [...comps].sort((a,b) => (b.finiti||0) - (a.finiti||0));
+  else if (filter === 'wip') comps = [...comps].sort((a,b) => (b.tot_wip||0) - (a.tot_wip||0));
+  else comps = [...comps].sort((a,b) => (a.gg_copertura_wip_fin||99) - (b.gg_copertura_wip_fin||99));
+
+  document.getElementById('modalTitle').textContent =
+    `${{titles[filter] || filter}} — ${{proj}} (${{comps.length}} componenti)`;
+
+  const projCls = 'proj-' + proj.toLowerCase().replace(/[\s/]/g,'');
+  document.getElementById('modalBody').innerHTML = comps.map(c => {{
+    const gg = c.gg_copertura_wip_fin || 0;
+    const cod = c.codice_s || c.codice_hard || c.label;
+    return `<tr>
+      <td><span class="badge ${{projCls}}">${{c.progetto}}</span></td>
+      <td>${{c.famiglia}}</td>
+      <td style="font-size:.82rem;max-width:220px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${{cod}}</td>
+      <td class="num">${{Math.round(c.tot_wip||0).toLocaleString()}}</td>
+      <td class="num">${{Math.round(c.finiti||0).toLocaleString()}}</td>
+      <td class="num">${{gg > 0 ? gg.toFixed(1) : '-'}}</td>
+      <td><span class="badge ${{c.semaforo||'verde'}}">${{
+        c.semaforo==='rosso' ? '🔴 Critico' : c.semaforo==='giallo' ? '🟡 Att.' : '🟢 OK'
+      }}</span></td>
+    </tr>`;
+  }}).join('');
+
+  document.getElementById('kpiModal').classList.add('open');
+}}
+
+function closeModal() {{
+  document.getElementById('kpiModal').classList.remove('open');
+}}
+
+document.addEventListener('keydown', e => {{ if (e.key === 'Escape') closeModal(); }});
+
+// ─── Debounce ricerca (evita render ad ogni tasto) ───
+(function() {{
+  const delay = 250;
+  const searches = [
+    {{ id: 'filtSearchPrio',   fn: filterPriority }},
+    {{ id: 'filtSearchDet',    fn: renderDettaglio }},
+    {{ id: 'filtSearchMatrix', fn: renderMatrix }},
+  ];
+  searches.forEach(({{ id, fn }}) => {{
+    const el = document.getElementById(id);
+    if (!el) return;
+    let t;
+    el.oninput = () => {{ clearTimeout(t); t = setTimeout(fn, delay); }};
+  }});
+}})();
+
+// ─── Mappatura SAP ───
+function renderMapping() {{
+  const map = DATA.mapping || {{}};
+  
+  // Materiali (Sola lettura)
+  const tMat = document.getElementById('tblMapMaterialsBody');
+  if (tMat) {{
+    const mats = Object.values(map.materiali || {{}});
+    tMat.innerHTML = mats.map(m => `
+      <tr>
+        <td>${{m.soft  || '-'}}</td>
+        <td>${{m.inter || '-'}}</td>
+        <td>${{m.hard  || '-'}}</td>
+      </tr>`).join('');
+  }}
+
+  // Stazioni (Editabili)
+  const tSt = document.getElementById('tblMapStationsBody');
+  if (tSt) {{
+    // Raccogliamo TUTTE le stazioni uniche presenti nei componenti
+    const allStSet = new Set();
+    components.forEach(c => {{
+      Object.keys(c.stazioni || {{}}).forEach(s => allStSet.add(s));
+    }});
+    const allSt = Array.from(allStSet).sort();
+    const currentMappings = map.stazioni || {{}};
+
+    tSt.innerHTML = allSt.map(name => {{
+      const ops = currentMappings[name] || [];
+      const val = ops.join(', ');
+      return `
+        <tr>
+          <td style="font-weight:600">${{name}}</td>
+          <td>
+            <input type="text" class="mod-input" style="width:100%" 
+              value="${{val}}" data-station="${{name}}" 
+              placeholder="es. 90, 80" oninput="this.classList.add('changed')">
+          </td>
+        </tr>`;
+    }}).join('');
+  }}
+}}
+
+function saveStationMapping() {{
+  const rows = document.querySelectorAll('#tblMapStationsBody input');
+  const newMap = {{}};
+  rows.forEach(inp => {{
+    const st = inp.dataset.station;
+    const val = inp.value.trim();
+    if (val) {{
+      newMap[st] = val.split(',').map(s => s.trim()).filter(s => s);
+    }}
+  }});
+
+  const btn = document.getElementById('btnSaveMapping');
+  btn.disabled = true;
+  btn.textContent = '⏳ Salvataggio...';
+
+  fetch('/save-station-mapping', {{
+    method: 'POST',
+    headers: {{ 'Content-Type': 'application/json' }},
+    body: JSON.stringify(newMap)
+  }})
+  .then(r => r.json())
+  .then(d => {{
+    alert(d.message);
+    location.reload();
+  }})
+  .catch(e => {{
+    alert('Errore: ' + e);
+    btn.disabled = false;
+    btn.textContent = '💾 Salva Mappature Stazioni';
+  }});
+}}
+renderMapping();
+
+// ─── Target giornalieri (pre-popola input) ───
+(function() {{
+  const tv = {{}};
+  components.forEach(c => {{ if (!tv[c.progetto] && (c.demand_fd1||0) > 0) tv[c.progetto] = c.demand_fd1; }});
+  const fEco = document.getElementById('t_dct_eco');
+  const f8fe = document.getElementById('t_8fe');
+  const f300 = document.getElementById('t_dct300');
+  if (fEco) fEco.value = tv['DCT Eco'] || '';
+  if (f8fe) f8fe.value = tv['8Fe']     || '';
+  if (f300) f300.value = tv['DCT 300'] || '';
+}})();
+
+function saveTargets() {{
+  const targets = {{
+    'DCT Eco': _parseInt(document.getElementById('t_dct_eco').value),
+    '8Fe':     _parseInt(document.getElementById('t_8fe').value),
+    'DCT 300': _parseInt(document.getElementById('t_dct300').value),
+  }};
+  if (Object.values(targets).every(v => v === 0)) {{ alert('Inserisci almeno un valore.'); return; }}
+  fetch('/save-targets', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(targets) }})
+    .then(r => r.json()).then(d => {{ alert(d.message); location.reload(); }})
+    .catch(() => alert('Errore durante il salvataggio dei target.'));
+}}
+
+function saveInventory() {{
+  if (Object.keys(_modData).length === 0) {{ alert('Nessuna modifica da salvare.'); return; }}
+  const loader = document.createElement('div');
+  loader.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem";
+  loader.innerHTML = '⏳ Salvataggio e ricalcolo in corso...';
+  document.body.appendChild(loader);
+  fetch('/save-inventory', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(_modData) }})
+    .then(r => r.json()).then(d => {{ alert(d.message); location.reload(); }})
+    .catch(() => {{ document.body.removeChild(loader); alert('Errore durante il salvataggio.'); }});
+}}
+
+// ─── Archivio ───
+const _semColors = {{'rosso':'#dc3545','giallo':'#ffc107','verde':'#28a745'}};
+const _pColors   = {{'DCT Eco':'#4f8ef7','8Fe':'#ce93d8','DCT 300':'#4dd0e1'}};
+let _archiveItems = [];
+function _archView(btn) {{ viewArchive(_archiveItems[+btn.dataset.archIdx]); }}
+function _archDel(btn)  {{
+  if (!confirm('Eliminare questo snapshot?')) return;
+  deleteArchive(_archiveItems[+btn.dataset.archIdx].id);
+}}
+
+function saveArchive() {{
+  const label = document.getElementById('archiveLabel').value.trim();
+  fetch('/archive-save', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{label}}) }})
+    .then(r => r.json()).then(d => {{
+      alert(d.message);
+      document.getElementById('archiveLabel').value = '';
+      loadArchiveList();
+    }}).catch(() => alert('Errore durante archiviazione.'));
+}}
+
+function saveProgettoArchive(progetto) {{
+  const now = new Date();
+  const ts  = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT',{{hour:'2-digit',minute:'2-digit'}});
+  const label = progetto + ' — ' + ts;
+  fetch('/archive-save', {{method:'POST', headers:{{'Content-Type':'application/json'}},
+    body: JSON.stringify({{label, progetto}})}})
+    .then(r => r.json()).then(d => alert(d.message))
+    .catch(() => alert('Errore durante archiviazione.'));
+}}
+
+function loadArchiveList() {{
+  fetch('/archive-list').then(r => r.json()).then(renderArchiveList)
+    .catch(() => {{ document.getElementById('archiveTimeline').innerHTML = '<p style="color:var(--red)">Errore caricamento archivio.</p>'; }});
+}}
+
+function renderArchiveList(items) {{
+  _archiveItems = items;
+  const el = document.getElementById('archiveTimeline');
+  if (!items.length) {{
+    el.innerHTML = '<p style="color:var(--muted);font-size:.88rem;padding:20px 0">Nessuno snapshot salvato. Usa il pulsante sopra per archiviare lo stato attuale.</p>';
+    return;
+  }}
+
+  // Calcola trend WIP rispetto allo snapshot precedente
+  el.innerHTML = items.map((item, idx) => {{
+    const dt = new Date(item.timestamp);
+    const dateStr = dt.toLocaleDateString('it-IT', {{day:'2-digit', month:'short', year:'numeric'}});
+    const timeStr = dt.toLocaleTimeString('it-IT', {{hour:'2-digit', minute:'2-digit'}});
+    const prev = items[idx + 1];
+
+    const projBadges = Object.entries(item.kpi || {{}}).map(([proj, k]) => {{
+      const col = _pColors[proj] || '#8892a4';
+      const wipK = Math.round(k.wip || 0);
+      // trend WIP vs snapshot precedente
+      let trend = '';
+      if (prev && prev.kpi && prev.kpi[proj]) {{
+        const diff = (k.wip || 0) - (prev.kpi[proj].wip || 0);
+        if (diff > 0)  trend = `<span style="color:#28a745;font-size:.7rem">▲ ${{Math.round(diff)}}</span>`;
+        if (diff < 0)  trend = `<span style="color:#dc3545;font-size:.7rem">▼ ${{Math.round(Math.abs(diff))}}</span>`;
+      }}
+      const sems = [
+        k.rossi  ? `<span style="background:#dc3545;color:#fff;border-radius:4px;padding:1px 5px;font-size:.68rem">${{k.rossi}}🔴</span>` : '',
+        k.gialli ? `<span style="background:#ffc107;color:#000;border-radius:4px;padding:1px 5px;font-size:.68rem">${{k.gialli}}🟡</span>` : '',
+        k.verdi  ? `<span style="background:#28a745;color:#fff;border-radius:4px;padding:1px 5px;font-size:.68rem">${{k.verdi}}🟢</span>` : '',
+      ].filter(Boolean).join(' ');
+      return `<div style="background:var(--card2);border-left:3px solid ${{col}};border-radius:6px;padding:8px 12px;min-width:150px">
+        <div style="font-size:.7rem;color:${{col}};font-weight:700;margin-bottom:4px">${{proj}}</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px">${{sems}}</div>
+        <div style="font-size:.75rem;color:var(--muted)">WIP ${{wipK.toLocaleString('it-IT')}} ${{trend}}</div>
+      </div>`;
+    }}).join('');
+
+    return `<div style="display:flex;gap:0;margin-bottom:16px">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-right:14px;flex-shrink:0">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);margin-top:4px"></div>
+        <div style="width:2px;flex:1;background:var(--border);margin-top:4px"></div>
+      </div>
+      <div style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <span style="font-size:.82rem;color:var(--muted)">${{dateStr}} · ${{timeStr}}</span>
+            ${{item.label ? `<span style="margin-left:10px;font-size:.88rem;font-weight:600;color:var(--text)">"${{item.label}}"</span>` : ''}}
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn secondary" style="font-size:.78rem;padding:4px 10px"
+              data-arch-idx="${{idx}}" onclick="_archView(this)">👁 Visualizza</button>
+            <button class="btn secondary" style="font-size:.78rem;padding:4px 10px;color:var(--red);border-color:var(--red)"
+              data-arch-idx="${{idx}}" onclick="_archDel(this)">🗑</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">${{projBadges}}</div>
+      </div>
+    </div>`;
+  }}).join('');
+}}
+
+function deleteArchive(id) {{
+  fetch('/archive-delete', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{id}}) }})
+    .then(r => r.json()).then(() => loadArchiveList())
+    .catch(() => alert('Errore eliminazione.'));
+}}
+
+function viewArchive(item) {{
+  const id = item.id;
+  const dt = new Date(item.timestamp);
+  const label = item.label || dt.toLocaleDateString('it-IT') + ' ' + dt.toLocaleTimeString('it-IT', {{hour:'2-digit',minute:'2-digit'}});
+  fetch('/archive-load/' + id).then(r => r.json()).then(data => {{
+    const comps = data.componenti || [];
+    const pColors2 = {{'DCT Eco':'#4f8ef7','8Fe':'#ce93d8','DCT 300':'#4dd0e1'}};
+    const byProj = {{}};
+    comps.forEach(c => {{ if (!byProj[c.progetto]) byProj[c.progetto] = []; byProj[c.progetto].push(c); }});
+
+    const html = Object.entries(byProj).map(([proj, cs]) => {{
+      const col = pColors2[proj] || '#8892a4';
+      const cards = cs.map(c => {{
+        const gg = c.gg_copertura_wip_fin || 0;
+        const sem = c.semaforo || 'verde';
+        const semCol = {{'rosso':'#dc3545','giallo':'#ffc107','verde':'#28a745'}}[sem] || '#28a745';
+        const stations = Object.entries(c.stazioni || {{}});
+        const stRows = stations.map(([st, d]) => {{
+          const q = typeof d === 'object' ? (d.qty||0) : d;
+          return q > 0 ? `<div style="display:flex;justify-content:space-between;font-size:.72rem;padding:2px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--muted)">${{st}}</span>
+            <span style="color:var(--accent)">${{q.toLocaleString('it-IT')}} pz</span>
+          </div>` : '';
+        }}).filter(Boolean).join('');
+        return `<div style="background:var(--card2);border-radius:10px;padding:12px;border-top:3px solid ${{col}}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+            <div>
+              <div style="font-size:.82rem;font-weight:600">${{c.famiglia}}</div>
+              <div style="font-size:.68rem;color:var(--muted)">${{c.codice_s||''}}</div>
+            </div>
+            <span style="background:${{semCol}}22;color:${{semCol}};border:1px solid ${{semCol}}44;
+              border-radius:20px;padding:2px 8px;font-size:.72rem;font-weight:700;height:fit-content">
+              ${{gg.toFixed(1)}} gg
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <div style="background:var(--card);border-radius:4px;padding:6px;text-align:center">
+              <div style="font-size:.62rem;color:var(--muted)">FINITI</div>
+              <div style="font-weight:700;color:${{col}}">${{Math.round(c.finiti||0).toLocaleString('it-IT')}}</div>
+            </div>
+            <div style="background:var(--card);border-radius:4px;padding:6px;text-align:center">
+              <div style="font-size:.62rem;color:var(--muted)">WIP</div>
+              <div style="font-weight:700">${{Math.round(c.tot_wip||0).toLocaleString('it-IT')}}</div>
+            </div>
+          </div>
+          ${{stRows ? `<div style="font-size:.62rem;color:var(--muted);margin-bottom:4px">STAZIONI</div>${{stRows}}` : ''}}
+        </div>`;
+      }}).join('');
+      const n = cs.length;
+      return `<div style="margin-bottom:20px">
+        <div style="font-size:.7rem;font-weight:700;color:${{col}};text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${{proj}}</div>
+        <div style="display:grid;grid-template-columns:repeat(${{n}},1fr);gap:12px">${{cards}}</div>
+      </div>`;
+    }}).join('');
+
+    document.getElementById('archiveModalTitle').textContent = '📦 ' + label;
+    document.getElementById('archiveModalBody').innerHTML = html;
+    document.getElementById('archiveModal').classList.add('open');
+  }}).catch(() => alert('Errore caricamento snapshot.'));
+}}
+
+function closeArchiveModal() {{
+  document.getElementById('archiveModal').classList.remove('open');
+}}
+
+// ─── Archive config ───
+let _cfgMode = 'local';
+function setCfgMode(mode) {{
+  _cfgMode = mode;
+  document.getElementById('cfgSupabaseFields').style.display = mode === 'supabase' ? '' : 'none';
+  document.getElementById('cfgBtnLocal').style.opacity    = mode === 'local'    ? '1' : '0.5';
+  document.getElementById('cfgBtnSupabase').style.opacity = mode === 'supabase' ? '1' : '0.5';
+}}
+
+function loadArchiveConfig() {{
+  fetch('/archive-config').then(r => r.json()).then(cfg => {{
+    _cfgMode = cfg.mode || 'local';
+    document.getElementById('cfgUrl').value   = cfg.supabase_url   || '';
+    document.getElementById('cfgTable').value = cfg.supabase_table || '';
+    setCfgMode(_cfgMode);
+    const label = _cfgMode === 'supabase'
+      ? (cfg.configured ? '☁️ Supabase' : '☁️ Supabase (non configurato)')
+      : '💾 Locale';
+    document.getElementById('archiveCfgMode').textContent = label;
+  }}).catch(() => {{}});
+}}
+
+function saveArchiveConfig() {{
+  const body = {{
+    mode:              _cfgMode,
+    supabase_url:      document.getElementById('cfgUrl').value.trim(),
+    supabase_anon_key: document.getElementById('cfgKey').value.trim(),
+    supabase_table:    document.getElementById('cfgTable').value.trim() || 'bap_archivio',
+  }};
+  const msgEl = document.getElementById('cfgMsg');
+  msgEl.textContent = 'Salvataggio...';
+  fetch('/archive-config', {{method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(body)}})
+    .then(r => r.json()).then(d => {{
+      msgEl.textContent = d.message;
+      document.getElementById('cfgKey').value = '';
+      loadArchiveConfig();
+      loadArchiveList();
+    }}).catch(() => {{ msgEl.textContent = 'Errore connessione.'; }});
+}}
+
+// ─── Enter su .mod-input: salva ───
+document.addEventListener('keydown', function(e) {{
+  if (e.key !== 'Enter') return;
+  if (!e.target.classList.contains('mod-input')) return;
+  e.preventDefault();
+  if (_detEditMode) saveInventory();
+}});
+
+</script>
+</body>
+</html>"""
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'r') as f:
+            d = json.load(f)
+        genera_dashboard(d['componenti'], 'dashboard.html')
+        print("Dashboard generata: dashboard.html")

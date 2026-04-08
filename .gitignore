@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+
+# Project specific
+archivio/
+dati_bap.json
+dashboard.html
+server.log
+*.tmp
+bap_config.json
+
+# Excel/SAP Data (Ignored for security and size)
+*.xls
+*.xlsx
+*.csv
+
+# System
+.DS_Store

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(python3 bap_processor.py)",
+      "Bash(node -e \":*)",
+      "Bash(python3 bap_dashboard.py)"
+    ],
+    "additionalDirectories": [
+      "/Users/angelofato/.claude/projects/-Users-angelofato-Documents-Claude-Projects-Tanzi",
+      "/tmp"
+    ]
+  }
+}
