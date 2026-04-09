@@ -1518,13 +1518,6 @@ function renderDettaglio() {
       </div>`;
     }).join('');
 
-    const delBtn = _detEditMode 
-      ? `<button onclick="deleteCard('${c.progetto.replace(/'/g,"\\'")}', '${c.label.replace(/'/g,"\\'")}')" 
-                 title="Elimina questa box"
-                 style="background:var(--card2); border:1px solid var(--red); color:var(--red); cursor:pointer; 
-                        border-radius:4px; padding:2px 6px; font-size:0.9rem; margin-left:8px">🗑️</button>`
-      : '';
-
     return `<div id="det-card-${cardId}" style="background:var(--card);border:1px solid ${modified?'var(--yellow)':'var(--border)'};border-radius:12px;padding:16px;border-top:3px solid ${col}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
         <div>
@@ -1533,10 +1526,7 @@ function renderDettaglio() {
           <div style="font-size:.72rem;color:var(--accent);margin-top:2px">${c.codice_s||'-'}</div>
           <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${c.codice_hard||'-'}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:4px">
-          <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}">${gg.toFixed(1)} gg</span>
-          ${delBtn}
-        </div>
+        <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}">${gg.toFixed(1)} gg</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:var(--card2);border-radius:6px;padding:8px 10px;min-height:58px;display:flex;flex-direction:column">
@@ -2178,15 +2168,6 @@ function deleteBox(idx) {
   if (!confirm(`Sei sicuro di voler eliminare la box "${MASTER_DATA[idx].label}"?`)) return;
   MASTER_DATA.splice(idx, 1);
   saveMaster();
-}
-
-function deleteCard(proj, label) {
-  const idx = MASTER_DATA.findIndex(c => c.progetto === proj && c.label === label);
-  if (idx !== -1) {
-    deleteBox(idx);
-  } else {
-    alert("Impossibile trovare il componente nel master.");
-  }
 }
 
 function saveNewBox() {
