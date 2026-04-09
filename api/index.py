@@ -152,7 +152,8 @@ def sync_from_supabase():
         rows = supabase_req('GET', f'?select=data&id=eq.live', table=STATE_TABLE)
         if rows:
             state = rows[0].get('data', {})
-            for key, filename in [('targets', 'bap_targets.json'), ('overrides', 'bap_overrides.json')]:
+            # Aggiunto bap_master.json alla sincronizzazione
+            for key, filename in [('targets', 'bap_targets.json'), ('overrides', 'bap_overrides.json'), ('master', 'bap_master.json')]:
                 if key in state:
                     with open(os.path.join(TEMP_DIR, filename), 'w', encoding='utf-8') as f:
                         json.dump(state[key], f, ensure_ascii=False, indent=2)
@@ -160,11 +161,15 @@ def sync_from_supabase():
         print(f"Errore sync Supabase: {e}")
 
 def sync_to_supabase():
-    """Salva targets e overrides correnti su Supabase."""
+    """Salva targets, overrides e master correnti su Supabase."""
     try:
         state = {}
-        for key, filename in [('targets', 'bap_targets.json'), ('overrides', 'bap_overrides.json')]:
+        for key, filename in [('targets', 'bap_targets.json'), ('overrides', 'bap_overrides.json'), ('master', 'bap_master.json')]:
             p = os.path.join(TEMP_DIR, filename)
+            if not os.path.exists(p) and os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', filename)):
+                # Fallback per il master se non ancora in /tmp
+                p = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', filename)
+                
             if os.path.exists(p):
                 with open(p, 'r', encoding='utf-8') as f:
                     state[key] = json.load(f)
@@ -278,6 +283,36 @@ def save_inventory():
     try:
         result = bap_processor.run(base_dir=TEMP_DIR)
         return jsonify({'message': 'Inventario salvato.', 'data': result})
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
+
+@app.route('/api/get-master', methods=['GET'])
+def get_master():
+    sync_from_supabase()
+    master_path = os.path.join(TEMP_DIR, 'bap_master.json')
+    if not os.path.exists(master_path):
+        # Fallback al file statico iniziale
+        master_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'bap_master.json')
+    
+    try:
+        with open(master_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
+
+@app.route('/api/save-master', methods=['POST'])
+def save_master():
+    data = request.json
+    master_path = os.path.join(TEMP_DIR, 'bap_master.json')
+    with open(master_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    sync_to_supabase()
+    
+    try:
+        result = bap_processor.run(base_dir=TEMP_DIR)
+        return jsonify({'message': 'Master aggiornato.', 'data': result})
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 

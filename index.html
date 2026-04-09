@@ -279,6 +279,7 @@
     <button class="tab-btn" onclick="switchTab('pnum', this)">📊 P-NUM Flow (Sync)</button>
     <button class="tab-btn" onclick="switchTab('vincoli', this)">⛓️ Vincoli</button>
     <button class="tab-btn" onclick="switchTab('mapping', this)">🛠️ Mappatura SAP</button>
+    <button class="tab-btn" onclick="switchTab('boxes', this)">📦 Gestione Box</button>
     <button class="tab-btn" onclick="switchTab('sap', this)">📥 Import SAP</button>
   </div>
 
@@ -512,6 +513,83 @@
             <!-- Generato da JS -->
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ GESTIONE BOX ═══════════════════════════════ -->
+  <div id="tab-boxes" class="tab-pane">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <div>
+        <h3 style="color:var(--accent)">📦 Gestione Componenti (Box)</h3>
+        <p style="font-size:.82rem;color:var(--muted)">Aggiungi o rimuovi le "box" (componenti) monitorate nella dashboard.</p>
+      </div>
+      <button class="btn" onclick="showAddBoxModal()">➕ Aggiungi Nuova Box</button>
+    </div>
+
+    <div class="chart-card">
+      <div class="tbl-wrap">
+        <table id="tblBoxes">
+          <thead>
+            <tr>
+              <th>Progetto</th>
+              <th>Famiglia</th>
+              <th>Label (Nome Box)</th>
+              <th>Codici (Hard/Soft)</th>
+              <th style="width:100px">Azioni</th>
+            </tr>
+          </thead>
+          <tbody id="tblBoxesBody">
+            <!-- Renderizzato da JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Aggiunta Box -->
+  <div id="boxModal" class="modal-overlay">
+    <div class="modal-box" style="width:500px">
+      <div class="modal-header">
+        <div class="modal-title">Inserisci Nuova Box (Componente)</div>
+        <button class="modal-close" onclick="closeBoxModal()">×</button>
+      </div>
+      <div class="modal-body" style="padding:20px">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+          <div>
+            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Progetto</label>
+            <select id="boxProj" style="width:100%">
+              <option value="DCT Eco">DCT Eco</option>
+              <option value="8Fe">8Fe</option>
+              <option value="DCT 300">DCT 300</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Famiglia</label>
+            <input type="text" id="boxFamily" placeholder="es. SG2" style="width:100%">
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Label (Nome Visualizzato)</label>
+          <input type="text" id="boxLabel" placeholder="es. SG2-M0162645" style="width:100%">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
+          <div>
+            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Codice Hard (SAP)</label>
+            <input type="text" id="boxHard" placeholder="es. M0162645" style="width:100%">
+          </div>
+          <div>
+            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Codice Soft (SAP)</label>
+            <input type="text" id="boxSoft" placeholder="es. M0162644/S" style="width:100%">
+          </div>
+        </div>
+        <div style="margin-bottom:20px">
+          <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Stazioni (separate da virgola, in ordine)</label>
+          <textarea id="boxStations" placeholder="es. Laser, UT, Hobbing, Trattamento, Finiti" 
+                    style="width:100%; height:80px; background:var(--card2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:8px; font-size:.84rem; outline:none"></textarea>
+          <div style="font-size:.7rem; color:var(--muted); margin-top:4px">L'ordine definisce il flusso. L'ultima deve essere solitamente "Finiti".</div>
+        </div>
+        <button class="btn" style="width:100%" onclick="saveNewBox()">✅ Conferma e Aggiungi</button>
       </div>
     </div>
   </div>
@@ -2052,6 +2130,114 @@ document.addEventListener('keydown', function(e) {
   if (_detEditMode) saveInventory();
 });
 
+/* ─── Gestione Box (Master) ─── */
+let MASTER_DATA = [];
+
+function renderBoxes() {
+  const body = document.getElementById('tblBoxesBody');
+  body.innerHTML = '';
+  
+  MASTER_DATA.forEach((c, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="badge ${c.progetto.toLowerCase().replace(' ','')}">${c.progetto}</span></td>
+      <td>${c.famiglia || '-'}</td>
+      <td style="font-weight:600">${c.label}</td>
+      <td style="color:var(--muted); font-size:.75rem">
+        H: ${c.codice_hard || '-'}<br>
+        S: ${c.codice_s || '-'}
+      </td>
+      <td>
+        <button class="btn secondary" onclick="deleteBox(${idx})" 
+                style="padding:4px 8px; border-color:var(--red); color:var(--red)">🗑️</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function showAddBoxModal() {
+  document.getElementById('boxModal').classList.add('open');
+}
+
+function closeBoxModal() {
+  document.getElementById('boxModal').classList.remove('open');
+}
+
+function deleteBox(idx) {
+  if (!confirm(`Sei sicuro di voler eliminare la box "${MASTER_DATA[idx].label}"?`)) return;
+  MASTER_DATA.splice(idx, 1);
+  saveMaster();
+}
+
+function saveNewBox() {
+  const proj = document.getElementById('boxProj').value;
+  const fam = document.getElementById('boxFamily').value.trim();
+  const label = document.getElementById('boxLabel').value.trim();
+  const hard = document.getElementById('boxHard').value.trim();
+  const soft = document.getElementById('boxSoft').value.trim();
+  const stations = document.getElementById('boxStations').value.split(',').map(s => s.trim()).filter(s => s);
+
+  if (!label) { alert('La Label è obbligatoria.'); return; }
+  if (stations.length === 0) { alert('Inserisci almeno una stazione.'); return; }
+
+  const newBox = {
+    progetto: proj,
+    famiglia: fam,
+    label: label,
+    codice_hard: hard,
+    codice_s: soft,
+    stazioni_list: stations,
+    demand_fd1: 900 // Default
+  };
+
+  MASTER_DATA.push(newBox);
+  saveMaster();
+  closeBoxModal();
+  
+  // Svuota form
+  document.getElementById('boxFamily').value = '';
+  document.getElementById('boxLabel').value = '';
+  document.getElementById('boxHard').value = '';
+  document.getElementById('boxSoft').value = '';
+  document.getElementById('boxStations').value = '';
+}
+
+function saveMaster() {
+  showLoader('Salvataggio master in corso...');
+  fetch('/api/save-master', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(MASTER_DATA)
+  })
+  .then(r => r.json())
+  .then(res => {
+    DATA = res.data;
+    renderAll();
+    renderBoxes();
+    hideLoader();
+  })
+  .catch(err => {
+    alert('Errore nel salvataggio del master: ' + err);
+    hideLoader();
+  });
+}
+
+async function loadMaster() {
+  try {
+    const r = await fetch('/api/get-master');
+    MASTER_DATA = await r.json();
+    renderBoxes();
+  } catch(e) { console.error('Error loading master:', e); }
+}
+
+// Chiamata inizializzazione
+window.addEventListener('scroll', () => { /* legacy behavior keep */ });
+
+// Caricamento dati iniziale
+loadData().then(() => {
+  loadMaster();
+});
 </script>
 </body>
 </html>
