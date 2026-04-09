@@ -64,61 +64,63 @@ def load_sap_mapping(bap1_base_path):
             break
 
     if excel_path:
-        try:
-            print(f"  -> Integrazione mappatura da Excel: {excel_path}")
-            # Caricamento flessibile del file Excel
-            df = _read_excel_flexible(excel_path)
-            
-            # Se è un DataFrame .xlsx, forziamo lo sheet 'nuovo flusso' se presente
-            if excel_path.lower().endswith('.xlsx'):
-                try:
-                    df_spec = pd.read_excel(excel_path, sheet_name='nuovo flusso', header=None)
-                    df = df_spec
-                except:
-                    pass # Se lo sheet non esiste, usiamo quello letto in precedenza
-            elif df is not None:
-                # Per .xls non-standard, azzeriamo l'header se necessario per mappare indici fissi
-                df.columns = range(df.shape[1])
-
-            # Mappa Stazioni (Righe 1, 2, 3 - indici 0-based: 1, 2, 3)
-            for c in range(4, df.shape[1]):
-                st_val = df.iloc[3, c]
-                st_name = str(st_val).strip() if pd.notna(st_val) else ""
+        # Caricamento flessibile del file Excel
+        df = _read_excel_flexible(excel_path)
+        
+        if df is not None:
+            try:
+                print(f"  -> Integrazione mappatura da Excel: {excel_path}")
                 
-                if st_name and st_name != 'nan' and st_name != 'None':
-                    # NON sovrascrivere se già presente nel JSON (manual override)
-                    if st_name in SAP_STATIONS_MAP: continue
+                # Se è un DataFrame .xlsx, forziamo lo sheet 'nuovo flusso' se presente
+                if excel_path.lower().endswith('.xlsx'):
+                    try:
+                        df_spec = pd.read_excel(excel_path, sheet_name='nuovo flusso', header=None)
+                        df = df_spec
+                    except:
+                        pass # Se lo sheet non esiste, usiamo quello letto in precedenza
+                else:
+                    # Per .xls non-standard, azzeriamo l'header se necessario per mappare indici fissi
+                    df.columns = range(df.shape[1])
+
+                # Mappa Stazioni (Righe 1, 2, 3 - indici 0-based: 1, 2, 3)
+                for c in range(4, df.shape[1]):
+                    st_val = df.iloc[3, c]
+                    st_name = str(st_val).strip() if pd.notna(st_val) else ""
                     
-                    ops = []
-                    def _clean_op(val):
-                        if pd.isna(val): return None
-                        s = str(val).strip()
-                        if not s or s.lower() == 'nan': return None
-                        if s.endswith('.0'): s = s[:-2]
-                        return s
+                    if st_name and st_name != 'nan' and st_name != 'None':
+                        # NON sovrascrivere se già presente nel JSON (manual override)
+                        if st_name in SAP_STATIONS_MAP: continue
+                        
+                        ops = []
+                        def _clean_op(val):
+                            if pd.isna(val): return None
+                            s = str(val).strip()
+                            if not s or s.lower() == 'nan': return None
+                            if s.endswith('.0'): s = s[:-2]
+                            return s
 
-                    op1 = _clean_op(df.iloc[1, c]); op2 = _clean_op(df.iloc[2, c])
-                    if op1: ops.append(op1)
-                    if op2: ops.append(op2)
-                    if ops: SAP_STATIONS_MAP[st_name] = ops
+                        op1 = _clean_op(df.iloc[1, c]); op2 = _clean_op(df.iloc[2, c])
+                        if op1: ops.append(op1)
+                        if op2: ops.append(op2)
+                        if ops: SAP_STATIONS_MAP[st_name] = ops
 
-            # Mappa Materiali (da riga 5 in poi)
-            mats_df = df.iloc[4:, [0,1,2]].dropna(how='all')
-            for _, row in mats_df.iterrows():
-                soft  = str(row[0]).strip() if pd.notna(row[0]) else ""
-                inter = str(row[1]).strip() if pd.notna(row[1]) else ""
-                hard  = str(row[2]).strip() if pd.notna(row[2]) else ""
-                if hard:
-                    key = str(hard).strip().upper()
-                    if key not in SAP_MATERIALS_MAP: # Non sovrascrivere
-                        SAP_MATERIALS_MAP[key] = {"soft": soft, "inter": inter, "hard": hard}
-            
-            # Aggiorna la cache con i dati integrati
-            with open(PERMANENT_CACHE, 'w', encoding='utf-8') as f:
-                json.dump({"materiali": SAP_MATERIALS_MAP, "stazioni": SAP_STATIONS_MAP}, f, ensure_ascii=False, indent=2)
-            
-        except Exception as e:
-            print(f"  [ERRORE] Integrazione Excel fallita: {e}")
+                # Mappa Materiali (da riga 5 in poi)
+                mats_df = df.iloc[4:, [0,1,2]].dropna(how='all')
+                for _, row in mats_df.iterrows():
+                    soft  = str(row[0]).strip() if pd.notna(row[0]) else ""
+                    inter = str(row[1]).strip() if pd.notna(row[1]) else ""
+                    hard  = str(row[2]).strip() if pd.notna(row[2]) else ""
+                    if hard:
+                        key = str(hard).strip().upper()
+                        if key not in SAP_MATERIALS_MAP: # Non sovrascrivere
+                            SAP_MATERIALS_MAP[key] = {"soft": soft, "inter": inter, "hard": hard}
+                
+                # Aggiorna la cache con i dati integrati
+                with open(PERMANENT_CACHE, 'w', encoding='utf-8') as f:
+                    json.dump({"materiali": SAP_MATERIALS_MAP, "stazioni": SAP_STATIONS_MAP}, f, ensure_ascii=False, indent=2)
+                
+            except Exception as e:
+                print(f"  [ERRORE] Integrazione Excel fallita: {e}")
 
     if not SAP_MATERIALS_MAP:
         print(f"  [ATTENZIONE] Nessuna mappatura SAP caricata! Mappatura mancante sia in Excel che in JSON.")
@@ -592,6 +594,16 @@ def _read_excel_flexible(filepath):
     if not os.path.exists(filepath):
         return None
         
+    # Controllo preliminare per file corrotti o segnaposto (es. 11 byte "TESTCONTENT")
+    if os.path.getsize(filepath) < 100:
+        try:
+            with open(filepath, 'r', errors='ignore') as f:
+                content = f.read(20).strip()
+                if content and not content.startswith(('\x50\x4B', '\xD0\xCF')): # PK... o DOC...
+                    return None
+        except:
+            pass
+
     # 1. Tenta con il motore di default (solitamente openpyxl per .xlsx)
     try:
         return pd.read_excel(filepath)
@@ -606,9 +618,12 @@ def _read_excel_flexible(filepath):
         
     # 3. Tenta come tabella HTML (molti export SAP .xls sono in realtà HTML)
     try:
-        dfs = pd.read_html(filepath)
-        if dfs:
-            return dfs[0]
+        # Silenzia i warning di lxml se presente
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            dfs = pd.read_html(filepath)
+            if dfs:
+                return dfs[0]
     except Exception:
         pass
         
@@ -616,7 +631,8 @@ def _read_excel_flexible(filepath):
     try:
         # Molti export SAP hanno righe di intestazione report prima della tabella vera e propria.
         with open(filepath, 'rb') as f:
-            content = f.read().decode('utf-16')
+            raw_content = f.read()
+            content = raw_content.decode('utf-16')
             lines   = content.split('\n')
             skip    = 0
             # Cerchiamo l'intestazione nelle prime 100 righe (alcune Query SAP sono lunghe)
@@ -634,7 +650,8 @@ def _read_excel_flexible(filepath):
     except Exception:
         pass
         
-    raise ValueError(f"Impossibile leggere il file {filepath} con alcuno dei motori disponibili (Excel/HTML/TSV).")
+    print(f"  [AVVISO] Impossibile leggere il file {filepath} (formato non riconosciuto o corrotto).")
+    return None
 
 def _to_num(val):
     try:
