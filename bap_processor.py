@@ -701,51 +701,14 @@ def run(base_dir="."):
     raw_c = load_baseline_data(path("master_data"), path("inventory_baseline"))
 
     print("\n[2] Lettura SAP (opzionale)...")
-    zpp  = parse_sap_zpp093(path("sap_zpp093"))
-    mb51 = parse_sap_mb51(path("sap_mb51"))
+    zpp = _read_excel_flexible(path("sap_zpp093"))
+    mb51 = _read_excel_flexible(path("sap_mb51"))
 
-    # ─── Override target giornalieri (bap_targets.json) ───
-    targets_file = os.path.join(base_dir, "bap_targets.json")
-    if os.path.exists(targets_file):
-        with open(targets_file, 'r', encoding='utf-8') as f:
-            tgt = json.load(f)
-        n_tgt = 0
-        for c in raw_c:
-            v = tgt.get(c.get('progetto', ''), 0)
-            if v and v > 0:
-                c['demand_fd1'] = v
-                n_tgt += 1
-        if n_tgt:
-            print(f"  Target override applicati: {[f'{k}={v}' for k,v in tgt.items() if v]}")
+    # Elaborazione
+    all_c = process_components(baseline, zpp, mb51, overrides, targets)
 
-    # ─── Override inventario manuale (bap_overrides.json) ───
-    overrides_file = os.path.join(base_dir, "bap_overrides.json")
-    if os.path.exists(overrides_file):
-        with open(overrides_file, 'r', encoding='utf-8') as f:
-            ovrs = json.load(f)
-        n_ov = 0
-        for c in raw_c:
-            key = f"{c.get('progetto','')}||{c.get('label','')}"
-            if key in ovrs:
-                for field, val in ovrs[key].items():
-                    if field == 'stazioni' and isinstance(val, dict):
-                        # Merge quantità per stazione
-                        for st, qty in val.items():
-                            if st in c.get('stazioni', {}):
-                                if isinstance(c['stazioni'][st], dict):
-                                    c['stazioni'][st]['qty'] = qty
-                                else:
-                                    c['stazioni'][st] = qty
-                    else:
-                        c[field] = val
-                n_ov += 1
-        if n_ov:
-            print(f"  Override inventario applicati: {n_ov} componenti")
-
-    all_c = calcola_metriche(raw_c, zpp, mb51)
-
-    # Ordinamento custom ECO: SG2, SG3, SG4, SG5, SGR, RG587, RG901
-    ECO_FAM_ORDER = ['SG2', 'SG3', 'SG4', 'SG5', 'SGR', 'RG']
+    # Ordinamento (ECO prima, poi il resto)
+    ECO_FAM_ORDER = ['DG2','SG1','SG2','SG3','SG4','SG5','SG6','SG7','SG8','SGR','SGRW','RG','FG5','FG57','PIGNON']
     def eco_sort_key(c):
         if c.get('progetto') != 'DCT Eco':
             return (99, 0, '')
@@ -754,13 +717,11 @@ def run(base_dir="."):
             fam_idx = ECO_FAM_ORDER.index(fam)
         except ValueError:
             fam_idx = 98
-        # Per RG: ordina per codice (M0162587 prima di M0162901)
         cod = c.get('codice_s', '') or c.get('codice_hard', '') or ''
         return (fam_idx, 0, cod)
 
-    # Separa per mantenere l'ordine degli altri progetti invariato
-    eco_sorted   = sorted([c for c in all_c if c.get('progetto') == 'DCT Eco'],  key=eco_sort_key)
-    others       = [c for c in all_c if c.get('progetto') != 'DCT Eco']
+    eco_sorted = sorted([c for c in all_c if c.get('progetto') == 'DCT Eco'],  key=eco_sort_key)
+    others = [c for c in all_c if c.get('progetto') != 'DCT Eco']
     all_c = eco_sorted + others
 
     # Aggiungi indice display_order per preservarlo nel JS
@@ -772,29 +733,38 @@ def run(base_dir="."):
 
     print(f"\n[4] Totale componenti: {len(all_c)}")
 
-    out_json = path("output_json")
-    with open(out_json, 'w', encoding='utf-8') as f:
-        json.dump({
-            "generato_il": datetime.now().isoformat(),
-            "componenti": all_c,
-            "pnum_matrix": pnum_matrix, # Nuova chiave per la pagina dedicata
-            "sap_disponibile": bool(zpp or mb51),
-            "sap_mapping": {
-                "materiali": SAP_MATERIALS_MAP,
-                "stazioni": SAP_STATIONS_MAP
-            }
-        }, f, ensure_ascii=False, indent=2)
-    print(f"  -> JSON: {out_json}")
+    final_data = {
+        "generato_il": datetime.now().isoformat(),
+        "componenti": all_c,
+        "pnum_matrix": pnum_matrix, # Nuova chiave per la pagina dedicata
+        "sap_disponibile": bool(zpp is not None or mb51 is not None),
+        "sap_mapping": {
+            "materiali": SAP_MATERIALS_MAP,
+            "stazioni": SAP_STATIONS_MAP
+        }
+    }
 
-    print("\n[5] Generazione dashboard...")
-    from bap_dashboard import genera_dashboard
-    genera_dashboard(all_c, path("output_dashboard"), mapping={
-        "materiali": SAP_MATERIALS_MAP,
-        "stazioni": SAP_STATIONS_MAP
-    }, pnum_matrix=pnum_matrix)
-    print(f"  -> HTML: {path('output_dashboard')}")
+    out_json = path("output_json")
+    try:
+        with open(out_json, 'w', encoding='utf-8') as f:
+            json.dump(final_data, f, ensure_ascii=False, indent=2)
+        print(f"  -> JSON: {out_json}")
+    except Exception as e:
+        print(f"  [AVVISO] Impossibile scrivere JSON locale: {e}")
+
+    print("\n[5] Generazione dashboard (legacy)...")
+    try:
+        from bap_dashboard import genera_dashboard
+        genera_dashboard(all_c, path("output_dashboard"), mapping={
+            "materiali": SAP_MATERIALS_MAP,
+            "stazioni": SAP_STATIONS_MAP
+        }, pnum_matrix=pnum_matrix)
+        print(f"  -> HTML: {path('output_dashboard')}")
+    except Exception as e:
+        print(f"  [AVVISO] Dashboard legacy non generata: {e}")
+
     print("\n✅ Completato!\n")
-    return all_c
+    return final_data
 
 
 if __name__ == "__main__":
