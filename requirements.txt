@@ -1,5 +1,6 @@
 pandas
 openpyxl
+xlrd
 numpy
 flask
 flask-cors

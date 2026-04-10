@@ -147,18 +147,29 @@ import bap_processor
 TEMP_DIR = '/tmp' if os.environ.get('VERCEL') else os.path.dirname(os.path.abspath(__file__))
 
 def sync_from_supabase():
-    """Scarica targets e overrides da Supabase in /tmp se presenti."""
+    """Scarica targets e overrides da Supabase in /tmp e COPIA i file di sistema dal repo."""
     try:
+        # 1. Copia file statici dal repository a /tmp (necessario per il processore)
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        root_path = os.path.dirname(base_path)
+        for filename in ['BAP1.xlsx', 'CONFERMESAP.xls', 'pnumb.xlsx', 'bap_master.json', 'bap_mapping_permanent.json']:
+            src = os.path.join(root_path, filename)
+            dst = os.path.join(TEMP_DIR, filename)
+            if os.path.exists(src):
+                import shutil
+                if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+                    shutil.copy2(src, dst)
+
+        # 2. Carica dati dinamici da Supabase
         rows = supabase_req('GET', f'?select=data&id=eq.live', table=STATE_TABLE)
         if rows:
             state = rows[0].get('data', {})
-            # Aggiunto bap_master.json alla sincronizzazione
             for key, filename in [('targets', 'bap_targets.json'), ('overrides', 'bap_overrides.json'), ('master', 'bap_master.json')]:
                 if key in state:
                     with open(os.path.join(TEMP_DIR, filename), 'w', encoding='utf-8') as f:
                         json.dump(state[key], f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Errore sync Supabase: {e}")
+        print(f"Errore sync Supabase/Files: {e}")
 
 def sync_to_supabase():
     """Salva targets, overrides e master correnti su Supabase."""
