@@ -281,10 +281,10 @@
 </head>
 <body>
 
-<header style="border-bottom: 3px solid #ff4444; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);">
+<header>
   <div style="display:flex;align-items:center;gap:20px">
     <div>
-      <h1>⚙️ BAP Dashboard — ONLINE V2 (10 APRILE)</h1>
+      <h1>⚙️ BAP Dashboard — ONLINE</h1>
       <div class="subtitle">Consolidamento automatico inventari · DCT Eco · 8Fe · DCT 300</div>
     </div>
     <button class="upload-btn" onclick="switchTab('sap', document.querySelector('.tab-btn:last-child'))" style="margin-top:0;background:var(--green)">
@@ -293,7 +293,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <button id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
-    <div class="last-update">ULTIMO DEPLOY: 10/04/2026 21:55</div>
+    <div class="last-update">ULTIMO AGGIORNAMENTO: 10/04/2026</div>
   </div>
 </header>
 
@@ -1001,7 +1001,12 @@ let kpi = {};
 let RACK_SIZES = {};
 
 function loadData() {
-  return fetch('/api/data')
+  // Tenta prima il caricamento diretto del JSON (più affidabile su Vercel)
+  return fetch('/dati_bap.json')
+    .then(r => {
+      if (!r.ok) return fetch('/api/data'); // Fallback all'API se il JSON manca
+      return r;
+    })
     .then(r => r.json())
     .then(json => {
       DATA = json || {};
