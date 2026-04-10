@@ -152,11 +152,21 @@ def sync_from_supabase():
         # 1. Copia file statici dal repository a /tmp (necessario per il processore)
         base_path = os.path.dirname(os.path.abspath(__file__))
         root_path = os.path.dirname(base_path)
-        for filename in ['BAP1.xlsx', 'CONFERMESAP.xls', 'pnumb.xlsx', 'bap_master.json', 'bap_mapping_permanent.json']:
+        
+        # Lista estesa dei file necessari per il funzionamento del processore
+        essential_files = [
+            'BAP1.xlsx', 'CONFERMESAP.xls', 'pnumb.xlsx', 
+            'bap_master.json', 'bap_mapping_permanent.json',
+            'bap_inventory_baseline.json', 'bap_targets.json',
+            'bap_overrides.json', 'dati_bap.json'
+        ]
+        
+        for filename in essential_files:
             src = os.path.join(root_path, filename)
             dst = os.path.join(TEMP_DIR, filename)
             if os.path.exists(src):
                 import shutil
+                # Copia se non esiste o se il file nel repo è più recente
                 if not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
                     shutil.copy2(src, dst)
 
