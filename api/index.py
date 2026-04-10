@@ -3,11 +3,14 @@ from flask_cors import CORS
 import json
 import os
 import re
+import sys
+import traceback
 import urllib.request
 import urllib.error
 from datetime import datetime
 import pandas as pd
 import numpy as np
+import bap_processor
 
 app = Flask(__name__)
 CORS(app)
@@ -270,7 +273,13 @@ def get_data():
         else:
             return jsonify({'message': 'Dati non trovati né live né statici.'}), 404
     except Exception as e:
-        return jsonify({'message': f'Errore critico: {str(e)}'}), 500
+        error_info = {
+            'message': f'Errore critico backend: {str(e)}',
+            'traceback': traceback.format_exc(),
+            'temp_dir_contents': os.listdir(TEMP_DIR) if os.path.exists(TEMP_DIR) else 'TEMP_DIR not found'
+        }
+        print(f"ERRORE CRITICO VERCEL: {error_info}")
+        return jsonify(error_info), 500
 
 @app.route('/api/upload', methods=['POST'])
 def upload():
