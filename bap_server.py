@@ -265,6 +265,14 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {'message': str(e)})
 
+        elif self.path == '/api/data':
+            fname = 'dati_bap.json'
+            if os.path.exists(fname):
+                with open(fname, 'r', encoding='utf-8') as f:
+                    self._json_response(200, json.load(f))
+            else:
+                self._json_response(404, {'message': 'File dati non trovato.'})
+
         elif self.path == '/archive-config':
             cfg = load_config().get('archive', {})
             self._json_response(200, {
@@ -274,6 +282,18 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                 'configured':     bool(cfg.get('supabase_url') and cfg.get('supabase_anon_key')),
             })
 
+        elif self.path == '/api/get-master':
+            fname = 'bap_master.json'
+            if os.path.exists(fname):
+                with open(fname, 'r', encoding='utf-8') as f:
+                    self._json_response(200, json.load(f))
+            else:
+                self._json_response(200, [])
+            return
+
+        elif self.path in ('/dashboard.html', '/', '/index.html'):
+            self.path = '/index.html'
+            return super().do_GET()
         else:
             super().do_GET()
 
@@ -361,31 +381,60 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'message': 'JSON non valido'})
             return
 
-        if self.path in ('/save-targets', '/save-inventory'):
-            if self.path == '/save-targets':
+        if self.path in ('/api/save-targets', '/api/save-inventory'):
+            if self.path == '/api/save-targets':
                 tmp = 'bap_targets.json.tmp'
                 with open(tmp, 'w', encoding='utf-8') as f:
                     json.dump(data, f, ensure_ascii=False, indent=2)
                 os.replace(tmp, 'bap_targets.json')
                 print(f'[{ts_str}] Target salvati: {data}')
             else:
-                fname    = 'bap_overrides.json'
-                existing = {}
-                if os.path.exists(fname):
-                    with open(fname, 'r', encoding='utf-8') as f:
-                        existing = json.load(f)
-                existing.update(data)
-                tmp = fname + '.tmp'
-                with open(tmp, 'w', encoding='utf-8') as f:
-                    json.dump(existing, f, ensure_ascii=False, indent=2)
-                os.replace(tmp, fname)
-                print(f'[{ts_str}] Override salvati: {len(data)} componenti')
+                # Gestione salvataggio combinato: Ovverrides (qty) + Master (metadata)
+                ov_data = data.get('overrides', {})
+                ma_data = data.get('master', {})
+
+                # 1. Salva Overrides
+                if ov_data:
+                    fname_ov = 'bap_overrides.json'
+                    existing_ov = {}
+                    if os.path.exists(fname_ov):
+                        with open(fname_ov, 'r', encoding='utf-8') as f:
+                            existing_ov = json.load(f)
+                    existing_ov.update(ov_data)
+                    tmp_ov = fname_ov + '.tmp'
+                    with open(tmp_ov, 'w', encoding='utf-8') as f:
+                        json.dump(existing_ov, f, ensure_ascii=False, indent=2)
+                    os.replace(tmp_ov, fname_ov)
+                    print(f'[{ts_str}] Override salvati: {len(ov_data)} componenti')
+
+                # 2. Salva modifiche Master (struttura)
+                if ma_data:
+                    fname_ma = 'bap_master.json'
+                    if os.path.exists(fname_ma):
+                        with open(fname_ma, 'r', encoding='utf-8') as f:
+                            master_list = json.load(f)
+                        
+                        updated_count = 0
+                        for key, mods in ma_data.items():
+                            # key = progetto||label
+                            for item in master_list:
+                                if (item.get('progetto','') + '||' + item.get('label','')) == key:
+                                    item.update(mods)
+                                    updated_count += 1
+                                    break
+                        
+                        if updated_count > 0:
+                            tmp_ma = fname_ma + '.tmp'
+                            with open(tmp_ma, 'w', encoding='utf-8') as f:
+                                json.dump(master_list, f, ensure_ascii=False, indent=2)
+                            os.replace(tmp_ma, fname_ma)
+                            print(f'[{ts_str}] Master data aggiornata: {updated_count} componenti')
 
             ok, msg = self._run_processor()
             print(f'[{ts_str}] {"✅" if ok else "❌"} {msg}')
             self._json_response(200, {'message': msg})
 
-        elif self.path == '/archive-save':
+        elif self.path == '/api/archive-save':
             label     = data.get('label', '').strip()[:80]
             comp_key  = data.get('component_key', '').strip()[:120]
             if not os.path.exists('dati_bap.json'):
@@ -408,7 +457,7 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {'message': f'Errore archivio: {e}'})
 
-        elif self.path == '/archive-delete':
+        elif self.path == '/api/archive-delete':
             id_ = data.get('id', '')
             try:
                 ok = get_archive_backend().delete(id_)
@@ -438,7 +487,7 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._json_response(200, {'message': 'Modalita locale attivata.'})
 
-        elif self.path == '/save-station-mapping':
+        elif self.path == '/api/save-station-mapping':
             # Salva la mappatura manuale Stazioni -> Operazioni SAP
             fname = 'bap_mapping_permanent.json'
             mapping = {}
@@ -462,10 +511,10 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             print(f'[{ts_str}] {"✅" if ok else "❌"} {msg}')
             self._json_response(200, {'message': 'Mappature salvate e dati ricalcolati.'})
 
-        elif self.path == '/clear-data':
+        elif self.path == '/api/clear-data':
             # La logica principale è gestita all'inizio del metodo per efficienza.
             self._json_response(200, {'message': 'Dashboard resettata.'})
-        elif self.path == '/reset-baseline':
+        elif self.path == '/api/reset-baseline':
             # Azzera tutte le quantità nella baseline (punto zero)
             BASELINE_FILE = 'bap_inventory_baseline.json'
             if not os.path.exists(BASELINE_FILE):
@@ -480,6 +529,8 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                 import shutil
                 shutil.copy2(BASELINE_FILE, backup)
                 print(f'[{ts_str}] Backup baseline creato prima del reset: {backup}')
+
+                # ... (rest of reset logic remains same)
 
                 today = datetime.now().strftime('%Y-%m-%d')
                 for key in baseline:
@@ -499,7 +550,46 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {'message': f'Errore azzeramento: {e}'})
 
-        elif self.path == '/save-baseline':
+        elif self.path == '/api/delete-component':
+            key = data.get('key', '')
+            if not key:
+                self._json_response(400, {'message': 'Key mancante.'})
+                return
+            
+            fname_ma = 'bap_master.json'
+            if os.path.exists(fname_ma):
+                with open(fname_ma, 'r', encoding='utf-8') as f:
+                    master_list = json.load(f)
+                
+                # Filtra via il componente
+                new_list = [item for item in master_list 
+                            if (item.get('progetto','') + '||' + item.get('label','')) != key]
+                
+                if len(new_list) < len(master_list):
+                    tmp = fname_ma + '.tmp'
+                    with open(tmp, 'w', encoding='utf-8') as f:
+                        json.dump(new_list, f, ensure_ascii=False, indent=2)
+                    os.replace(tmp, fname_ma)
+                    
+                    # Rimuoviamo anche eventuali override per pulizia
+                    fname_ov = 'bap_overrides.json'
+                    if os.path.exists(fname_ov):
+                        with open(fname_ov, 'r', encoding='utf-8') as f:
+                            ov_data = json.load(f)
+                        if key in ov_data:
+                            del ov_data[key]
+                            with open(fname_ov, 'w', encoding='utf-8') as f:
+                                json.dump(ov_data, f, ensure_ascii=False, indent=2)
+
+                    print(f'[{ts_str}] Componente eliminato: {key}')
+                    self._run_processor()
+                    self._json_response(200, {'ok': True, 'message': 'Componente eliminato con successo.'})
+                else:
+                    self._json_response(404, {'message': 'Componente non trovato.'})
+            else:
+                self._json_response(500, {'message': 'File master non trovato.'})
+
+        elif self.path == '/api/save-baseline':
             # Salva lo stato attuale come nuova baseline
             BASELINE_FILE = 'bap_inventory_baseline.json'
             DATI_FILE     = 'dati_bap.json'
@@ -552,7 +642,7 @@ def start_server():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     try:
         server = http.server.HTTPServer(('localhost', PORT), UploadHandler)
-        url    = f'http://localhost:{PORT}/dashboard.html'
+        url    = f'http://localhost:{PORT}/'
         print('\n' + '='*50)
         print(' BAP SERVER - Dashboard Interattiva')
         print('='*50)

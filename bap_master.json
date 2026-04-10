@@ -2,7 +2,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "SG2",
-    "label": "SG2-M0162645-784",
+    "label": "SG2",
     "codice_hard": "M0162645",
     "codice_s": "M0162644/S",
     "demand_fd1": 900,
@@ -23,7 +23,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "SG3",
-    "label": "SG3-M0162624-784",
+    "label": "SG3",
     "codice_hard": "M0162624",
     "codice_s": "M0162623/S",
     "demand_fd1": 900,
@@ -43,7 +43,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "SG4",
-    "label": "SG4-M0162639-785",
+    "label": "SG4",
     "codice_hard": "M0162639",
     "codice_s": "M0162639/S",
     "demand_fd1": 900,
@@ -65,7 +65,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "SG5",
-    "label": "SG5-M0162622-784",
+    "label": "SG5",
     "codice_hard": "M0162622",
     "codice_s": "M0162622/S",
     "demand_fd1": 900,
@@ -85,7 +85,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "SGR",
-    "label": "SGR-M162524-784",
+    "label": "SGR",
     "codice_hard": "M162524",
     "codice_s": "M0162523/S",
     "demand_fd1": 900,
@@ -105,7 +105,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "RG",
-    "label": "RG-FD1-M0162587-790",
+    "label": "RG -FD1",
     "codice_hard": "FD1",
     "codice_s": "M0162587/S",
     "demand_fd1": 900,
@@ -125,7 +125,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "RG",
-    "label": "RG-FD2-M0162901-790",
+    "label": "RG - FD2",
     "codice_hard": "FD2",
     "codice_s": "M0162901/S",
     "demand_fd1": 900,
@@ -390,7 +390,7 @@
     "famiglia": "SG1",
     "label": "SG1-2511108150",
     "codice_hard": "2511108150",
-    "codice_s": "2511108150",
+    "codice_s": "2511108150/S",
     "demand_fd1": 1200,
     "stazioni_list": [
       "ORE 33",
@@ -410,7 +410,7 @@
     "famiglia": "SG1",
     "label": "SG1-2511124450",
     "codice_hard": "2511124450",
-    "codice_s": "2511124450",
+    "codice_s": "2511124450/S",
     "demand_fd1": 1200,
     "stazioni_list": [
       "ORE 33",
@@ -450,9 +450,9 @@
   {
     "progetto": "DCT 300",
     "famiglia": "DG2",
-    "label": "DG2-2511108350",
+    "label": "DG",
     "codice_hard": "2511108350",
-    "codice_s": "2511108350",
+    "codice_s": "2511108350/S",
     "demand_fd1": 1200,
     "stazioni_list": [
       "WS CORONCINA",
@@ -472,7 +472,7 @@
   {
     "progetto": "DCT 300",
     "famiglia": "DG2",
-    "label": "DG2-2511122350",
+    "label": "DG",
     "codice_hard": "2511122350",
     "codice_s": "2511122350",
     "demand_fd1": 1200,

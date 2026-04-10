@@ -235,14 +235,47 @@
   /* ─── Print ─── */
   @media print {
     header, .tabs, .filters, #detChangedBanner,
-    #detEditBtn, #detSaveBtn, #detResetBtn, #printDetBtn,
+    #detEditBtn, #detSaveBtn, #detResetBtn, .btn,
     .tab-pane:not(#tab-dettaglio) { display: none !important; }
-    #tab-dettaglio { display: block !important; }
-    .main { padding: 8px; }
-    body { background: #fff; color: #000; }
-    .badge.verde  { background:#d4f0dc !important; color:#1a7a32 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .badge.giallo { background:#fff3cd !important; color:#a07800 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    .badge.rosso  { background:#fde0e3 !important; color:#b52030 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    
+    #tab-dettaglio { display: block !important; padding: 0 !important; margin: 0 !important; }
+    .main { padding: 0 !important; margin: 0 !important; }
+    
+    body { background: #fff !important; color: #000 !important; }
+    
+    /* Forza layout a colonne fitte per la stampa */
+    #dettaglioCards > div[style*="grid-template-columns"] {
+      display: grid !important;
+      grid-template-columns: repeat(7, 1fr) !important; /* Come lo screenshot: 7-8 in una riga */
+      gap: 8px !important;
+    }
+    
+    /* Card Styles for Print */
+    [id^="det-card-"] {
+      background: #fff !important;
+      border: 1px solid #cdd3e3 !important;
+      color: #000 !important;
+      padding: 10px !important;
+      font-size: 0.75rem !important;
+      border-top-width: 4px !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    div[style*="background:var(--card2)"] {
+      background: #f0f2f7 !important;
+      border: 1px solid #cdd3e3 !important;
+    }
+    
+    .badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 0.65rem !important; }
+    .badge.verde  { background:#d4f0dc !important; color:#1a7a32 !important; }
+    .badge.giallo { background:#fff3cd !important; color:#a07800 !important; }
+    .badge.rosso  { background:#fde0e3 !important; color:#b52030 !important; }
+    
+    /* Nascondi tasto elimina in stampa */
+    [id^="det-card-"] button { display: none !important; }
+    
+    @page { size: landscape; margin: 0.5cm; }
   }
 </style>
 </head>
@@ -279,7 +312,6 @@
     <button class="tab-btn" onclick="switchTab('pnum', this)">📊 P-NUM Flow (Sync)</button>
     <button class="tab-btn" onclick="switchTab('vincoli', this)">⛓️ Vincoli</button>
     <button class="tab-btn" onclick="switchTab('mapping', this)">🛠️ Mappatura SAP</button>
-    <button class="tab-btn" onclick="switchTab('boxes', this)">📦 Gestione Box</button>
     <button class="tab-btn" onclick="switchTab('sap', this)">📥 Import SAP</button>
   </div>
 
@@ -476,7 +508,8 @@
         <button id="printDetBtn" class="btn secondary" onclick="window.print()">🖨️</button>
         <button id="detEditBtn" class="btn secondary" onclick="toggleDetEdit()">✏️ Modifica</button>
         <button id="detSaveBtn" class="btn" onclick="saveInventory()" style="display:none">💾 Salva</button>
-        <button id="detResetBtn" class="btn secondary" onclick="resetDetEdit()" style="display:none">↺</button>
+        <button id="detResetBtn" class="btn secondary" style="display:none" onclick="toggleDetEdit()">Reset</button>
+        <button class="btn" style="background:#5c6bc0" onclick="printDctEco()">🖨️ Stampa DCT Eco</button>
       </div>
     </div>
     <div id="detChangedBanner" style="display:none;background:rgba(255,193,7,.1);border:1px solid var(--yellow);border-radius:8px;padding:9px 14px;font-size:.82rem;color:var(--yellow);margin-bottom:14px">
@@ -517,82 +550,6 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════ GESTIONE BOX ═══════════════════════════════ -->
-  <div id="tab-boxes" class="tab-pane">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-      <div>
-        <h3 style="color:var(--accent)">📦 Gestione Componenti (Box)</h3>
-        <p style="font-size:.82rem;color:var(--muted)">Aggiungi o rimuovi le "box" (componenti) monitorate nella dashboard.</p>
-      </div>
-      <button class="btn" onclick="showAddBoxModal()">➕ Aggiungi Nuova Box</button>
-    </div>
-
-    <div class="chart-card">
-      <div class="tbl-wrap">
-        <table id="tblBoxes">
-          <thead>
-            <tr>
-              <th>Progetto</th>
-              <th>Famiglia</th>
-              <th>Label (Nome Box)</th>
-              <th>Codici (Hard/Soft)</th>
-              <th style="width:100px">Azioni</th>
-            </tr>
-          </thead>
-          <tbody id="tblBoxesBody">
-            <!-- Renderizzato da JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Aggiunta Box -->
-  <div id="boxModal" class="modal-overlay">
-    <div class="modal-box" style="width:500px">
-      <div class="modal-header">
-        <div class="modal-title">Inserisci Nuova Box (Componente)</div>
-        <button class="modal-close" onclick="closeBoxModal()">×</button>
-      </div>
-      <div class="modal-body" style="padding:20px">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
-          <div>
-            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Progetto</label>
-            <select id="boxProj" style="width:100%">
-              <option value="DCT Eco">DCT Eco</option>
-              <option value="8Fe">8Fe</option>
-              <option value="DCT 300">DCT 300</option>
-            </select>
-          </div>
-          <div>
-            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Famiglia</label>
-            <input type="text" id="boxFamily" placeholder="es. SG2" style="width:100%">
-          </div>
-        </div>
-        <div style="margin-bottom:12px">
-          <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Label (Nome Visualizzato)</label>
-          <input type="text" id="boxLabel" placeholder="es. SG2-M0162645" style="width:100%">
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px">
-          <div>
-            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Codice Hard (SAP)</label>
-            <input type="text" id="boxHard" placeholder="es. M0162645" style="width:100%">
-          </div>
-          <div>
-            <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Codice Soft (SAP)</label>
-            <input type="text" id="boxSoft" placeholder="es. M0162644/S" style="width:100%">
-          </div>
-        </div>
-        <div style="margin-bottom:20px">
-          <label style="display:block; font-size:.78rem; color:var(--muted); margin-bottom:4px">Stazioni (separate da virgola, in ordine)</label>
-          <textarea id="boxStations" placeholder="es. Laser, UT, Hobbing, Trattamento, Finiti" 
-                    style="width:100%; height:80px; background:var(--card2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:8px; font-size:.84rem; outline:none"></textarea>
-          <div style="font-size:.7rem; color:var(--muted); margin-top:4px">L'ordine definisce il flusso. L'ultima deve essere solitamente "Finiti".</div>
-        </div>
-        <button class="btn" style="width:100%" onclick="saveNewBox()">✅ Conferma e Aggiungi</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ═══════════════════════════════ SAP IMPORT ═══════════════════════════════ -->
   <div id="tab-sap" class="tab-pane">
@@ -775,6 +732,23 @@
         .then(d => { alert('✅ ' + d.message + '\n\nLa dashboard è tornata alla baseline.'); location.reload(); })
         .catch(() => alert('Errore durante la cancellazione.'));
     }
+    function showLoader(msg = 'Elaborazione in corso...') {
+      let el = document.getElementById('global-loader');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'global-loader';
+        el.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-family:inherit;backdrop-filter:blur(4px)";
+        document.body.appendChild(el);
+      }
+      el.innerHTML = `<div class="loader-spinner" style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px"></div><div style="font-size:1rem;font-weight:500">${msg}</div>`;
+      el.style.display = 'flex';
+    }
+
+    function hideLoader() {
+      const el = document.getElementById('global-loader');
+      if (el) el.style.display = 'none';
+    }
+
     function _baselineLoader(msg) {
       const el = document.getElementById('baseline-msg');
       el.textContent = '⏳ ' + msg;
@@ -832,6 +806,7 @@
         <div>
           <label style="display:block;font-size:.78rem;color:var(--muted);margin-bottom:4px">🟣 DCT 300</label>
           <input type="number" id="t_dct300" class="mod-input" min="0" placeholder="pz/gg" style="width:100%">
+        </div>
         </div>
       </div>
       <button class="btn" onclick="saveTargets()">💾 Salva Target e Ricalcola</button>
@@ -955,11 +930,14 @@ let kpi = {};
 let RACK_SIZES = {};
 
 function loadData() {
-  fetch('/api/data')
+  return fetch('/api/data')
     .then(r => r.json())
     .then(json => {
       DATA = json || {};
-      components = DATA.components || [];
+      components = DATA.components || DATA.componenti || [];
+      if (!DATA.projects) {
+        DATA.projects = [...new Set(components.map(c => c.progetto))];
+      }
       kpi = DATA.kpi || {};
       RACK_SIZES = DATA.rack_sizes || {};
       renderAll();
@@ -1414,6 +1392,7 @@ function renderPnumFlow() {
 // ─── Dettaglio componenti ───
 let _detEditMode = false;
 let _modData = {};
+let _modMaster = {};
 
 function toggleDetEdit() {
   _detEditMode = !_detEditMode;
@@ -1422,26 +1401,20 @@ function toggleDetEdit() {
   btn.className = _detEditMode ? 'btn' : 'btn secondary';
   document.getElementById('detSaveBtn').style.display = _detEditMode ? '' : 'none';
   document.getElementById('detResetBtn').style.display = _detEditMode ? '' : 'none';
-  if (!_detEditMode) { _modData = {}; _updateBanner(); }
+  if (!_detEditMode) { _modData = {}; _modMaster = {}; _updateBanner(); }
   renderDettaglio();
 }
 
-function resetDetEdit() {
-  _modData = {};
-  _updateBanner();
+function printDctEco() {
+  // 1. Imposta filtro su DCT Eco
+  document.getElementById('filtProjDet').value = 'DCT Eco';
+  document.getElementById('filtSearchDet').value = '';
+  // 2. Ricarica vista
   renderDettaglio();
-}
-
-function _updateBanner() {
-  const n = Object.keys(_modData).length;
-  const banner = document.getElementById('detChangedBanner');
-  if (banner) {
-    banner.style.display = n > 0 ? 'block' : 'none';
-    const span = document.getElementById('detChangedCount');
-    if (span) span.textContent = n;
-  }
-  const saveBtn = document.getElementById('detSaveBtn');
-  if (saveBtn && _detEditMode) saveBtn.textContent = n > 0 ? `💾 Salva (${n})` : '💾 Salva';
+  // 3. Piccolo timeout per sicurezza DOM
+  setTimeout(() => {
+    window.print();
+  }, 300);
 }
 
 function renderDettaglio() {
@@ -1449,9 +1422,11 @@ function renderDettaglio() {
   const srch = document.getElementById('filtSearchDet').value.toLowerCase();
   const filtered = components
     .filter(c => !proj || c.progetto===proj)
-    .filter(c => !srch || c.label.toLowerCase().includes(srch) || c.famiglia.toLowerCase().includes(srch));
+    .filter(c => !srch || c.label.toLowerCase().includes(srch) || (c.famiglia||'').toLowerCase().includes(srch));
   const cont = document.getElementById('dettaglioCards');
   const pColors = {'DCT Eco':'#4f8ef7','8Fe':'#ce93d8','DCT 300':'#4dd0e1'};
+
+  cont.innerHTML = filtered.map(c => buildCard(c)).join('');
 
   function buildCard(c) {
     const col      = pColors[c.progetto] || '#8892a4';
@@ -1459,11 +1434,14 @@ function renderDettaglio() {
     const key      = (c.progetto||'') + '||' + (c.label||'');
     const keyEsc   = key.replace(/"/g,'&quot;');
     const ov       = _modData[key] || {};
+    const ovM      = _modMaster[key] || {};
+    
     const finVal   = ov.finiti  !== undefined ? ov.finiti  : Math.round(c.finiti  || 0);
     const wipVal   = ov.tot_wip !== undefined ? ov.tot_wip : Math.round(c.tot_wip || 0);
     const gg       = c.gg_copertura_wip_fin || 0;
-    const stations = Object.entries(c.stazioni || {});
-    const modified = Object.keys(ov).length > 0;
+    const combinedStDict = _getCombinedStazioni(key, c);
+    const stations = Object.entries(combinedStDict);
+    const modified = Object.keys(ov).length > 0 || Object.keys(ovM).length > 0;
 
     const _valBox = (val, color) =>
       `<div style="font-size:1.05rem;font-weight:700;color:${color||'var(--text)'};text-align:right;flex:1;display:flex;align-items:center;justify-content:flex-end">${val.toLocaleString()}</div>`;
@@ -1483,7 +1461,48 @@ function renderDettaglio() {
            ${stations.length ? 'readonly' : `min="0" data-key="${keyEsc}" data-field="tot_wip" onfocus="this.select()" oninput="updateModDet(this)"`}>`
       : _valBox(wipVal, '');
 
-    // Flusso stazioni lineare (senza raggruppamento)
+    const deleteBtn = `<button onclick="deleteComponentDirectly('${keyEsc}')" style="background:rgba(220,53,69,0.1); border:1px solid rgba(220,53,69,0.3); color:var(--red); border-radius:6px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s" onmouseover="this.style.background='rgba(220,53,69,0.2)'" onmouseout="this.style.background='rgba(220,53,69,0.1)'" title="Elimina Box">🗑️</button>`;
+
+    // Metadata Editables
+    let metaHtml;
+    const isCompact = (c.progetto === 'DCT Eco');
+
+    if (_detEditMode) {
+      metaHtml = `
+        <div style="display:flex; flex-direction:column; gap:4px; flex:1">
+          <div style="display:flex; gap:4px">
+            <select class="mod-input${ovM.progetto?' changed':''}" style="font-size:.7rem; padding:2px; height:24px; flex:1" data-key="${keyEsc}" data-field="progetto" onchange="updateModMaster(this)">
+              <option value="DCT Eco" ${ (ovM.progetto||c.progetto) === 'DCT Eco' ? 'selected':''}>DCT Eco</option>
+              <option value="8Fe" ${ (ovM.progetto||c.progetto) === '8Fe' ? 'selected':''}>8Fe</option>
+              <option value="DCT 300" ${ (ovM.progetto||c.progetto) === 'DCT 300' ? 'selected':''}>DCT 300</option>
+            </select>
+            <input type="text" value="${ovM.famiglia||c.famiglia}" class="mod-input${ovM.famiglia?' changed':''}" style="font-size:.7rem; padding:2px; height:24px; width:60px" data-key="${keyEsc}" data-field="famiglia" oninput="updateModMaster(this)" placeholder="Famiglia">
+          </div>
+          <input type="text" value="${ovM.label||c.label}" class="mod-input${ovM.label?' changed':''}" style="font-size:.85rem; font-weight:700; padding:2px; height:26px" data-key="${keyEsc}" data-field="label" oninput="updateModMaster(this)" placeholder="Etichetta Box">
+          <div style="display:flex; gap:4px">
+            <input type="text" value="${ovM.codice_s||c.codice_s||''}" class="mod-input${ovM.codice_s?' changed':''}" style="font-size:.65rem; padding:2px; height:22px; flex:1" data-key="${keyEsc}" data-field="codice_s" oninput="updateModMaster(this)" placeholder="Codice Soft">
+            <input type="text" value="${ovM.codice_hard||c.codice_hard||''}" class="mod-input${ovM.codice_hard?' changed':''}" style="font-size:.65rem; padding:2px; height:22px; flex:1" data-key="${keyEsc}" data-field="codice_hard" oninput="updateModMaster(this)" placeholder="Codice Hard">
+          </div>
+        </div>
+        ${deleteBtn}
+        <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}" style="${isCompact?'font-size:0.65rem':''}">${gg.toFixed(1)} gg</span>
+      `;
+    } else {
+      metaHtml = `
+        <div style="flex:1">
+          <div style="font-size:${isCompact?'0.65rem':'0.75rem'};color:var(--muted)">${c.progetto}</div>
+          <div style="font-size:${isCompact?'0.85rem':'0.9rem'};font-weight:700;margin-top:2px;line-height:1.2">${c.label}</div>
+          <div style="font-size:0.68rem;color:var(--muted);opacity:0.8">${c.famiglia}</div>
+          <div style="font-size:0.7rem;color:var(--accent);margin-top:3px;font-weight:600">${c.codice_s||'-'}</div>
+          ${!isCompact?`<div style="font-size:0.7rem;color:var(--muted);margin-top:1px">${c.codice_hard||'-'}</div>`:''}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">
+          <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}" style="font-size:${isCompact?'0.65rem':'0.75rem'}">${gg.toFixed(1)} gg</span>
+          ${deleteBtn}
+        </div>
+      `;
+    }
+
     const stRows = stations.map(([st, data]) => {
       const q    = typeof data === 'object' ? (data.qty||0) : data;
       const ops  = typeof data === 'object' ? (data.sap_ops||[]) : [];
@@ -1499,46 +1518,51 @@ function renderDettaglio() {
       let qCell;
       if (_detEditMode) {
         qCell = `<input type="number" min="0" value="${stV}"
-          class="mod-input${stOv!==undefined?' changed':''}" style="width:72px"
+          class="mod-input${stOv!==undefined?' changed':''}" style="width:62px;height:22px;font-size:0.75rem"
           data-key="${keyEsc}" data-station="${stE}" data-cardid="${cardId}"
           data-rack-size="0" onfocus="this.select()" oninput="updateStation(this)">`;
       } else {
-        const disp = `<span style="color:${stV>0?'var(--accent)':'var(--muted)'}">${stV===0?'-':stV.toLocaleString()} pz</span>`;
-        qCell = `<div style="display:flex; align-items:center; gap:8px">
-                   <span title="Origine: ${orig}" style="font-size:0.75rem">${origIcon}</span>
-                   <span style="font-weight:600;text-align:right">${disp}</span>
+        const disp = `<span style="color:${stV>0?'var(--accent)':'var(--muted)'}">${stV===0?'-':stV.toLocaleString()}</span>`;
+        qCell = `<div style="display:flex; align-items:center; gap:4px">
+                   <span title="Origine: ${orig}" style="font-size:0.6rem;opacity:0.5">${origIcon}</span>
+                   <span style="font-weight:700;text-align:right;min-width:35px">${disp}</span>
                  </div>`;
       }
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.78rem;border-bottom:1px solid rgba(255,255,255,0.05)">
-        <div style="display:flex;flex-direction:column">
-          <span style="color:${stV>0?'var(--text)':'var(--muted)'}">${st}</span>
-          ${ops.length?`<span style="font-size:.62rem;color:var(--accent);opacity:0.8">SAP: ${ops.join(', ')}</span>`:''}
+      const delStBtn = _detEditMode ? `<button onclick="removeStationFromFlow('${keyEsc}','${stE}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:0.7rem;padding:0 2px;opacity:0.6" title="Rimuovi Stazione">✕</button>` : '';
+
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:${isCompact?'0.7rem':'.75rem'};border-bottom:1px solid rgba(255,255,255,0.04)">
+        <div style="display:flex;align-items:center;gap:4px;overflow:hidden">
+          ${delStBtn}
+          <div style="display:flex;flex-direction:column;overflow:hidden">
+            <span style="color:${stV>0?'var(--text)':'var(--muted)'};white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${st}</span>
+            ${!isCompact && ops.length?`<span style="font-size:.62rem;color:var(--accent);opacity:0.8">SAP: ${ops.join(', ')}</span>`:''}
+          </div>
         </div>
         ${qCell}
       </div>`;
     }).join('');
 
-    return `<div id="det-card-${cardId}" style="background:var(--card);border:1px solid ${modified?'var(--yellow)':'var(--border)'};border-radius:12px;padding:16px;border-top:3px solid ${col}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
-        <div>
-          <div style="font-size:.75rem;color:var(--muted)">${c.progetto}</div>
-          <div style="font-size:.9rem;font-weight:600;margin-top:2px">${c.famiglia}</div>
-          <div style="font-size:.72rem;color:var(--accent);margin-top:2px">${c.codice_s||'-'}</div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:1px">${c.codice_hard||'-'}</div>
-        </div>
-        <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}">${gg.toFixed(1)} gg</span>
+    const addStBtn = _detEditMode ? `
+      <button onclick="addStationToFlow('${keyEsc}')" style="background:none;border:1px dashed var(--border);color:var(--muted);width:100%;padding:4px;font-size:0.65rem;border-radius:4px;cursor:pointer;margin-top:6px">
+        ➕ Aggiungi Stazione
+      </button>` : '';
+
+    const padding = isCompact ? '10px' : '16px';
+    return `<div id="det-card-${cardId}" style="background:var(--card);border:1px solid ${modified?'var(--yellow)':'var(--border)'};border-radius:10px;padding:${padding};border-top:4px solid ${col};display:flex;flex-direction:column;height:100%">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:${isCompact?'6px':'10px'}">
+        ${metaHtml}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--card2);border-radius:6px;padding:8px 10px;min-height:58px;display:flex;flex-direction:column">
-          <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;white-space:nowrap">FINITI</div>
-          <div style="flex:1;display:flex;align-items:center">${fBox}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:${isCompact?'8px':'12px'}">
+        <div style="background:var(--card2);border-radius:6px;padding:${isCompact?'4px 6px':'8px 10px'};min-height:${isCompact?'44px':'58px'};display:flex;flex-direction:column">
+          <div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;white-space:nowrap">FINITI</div>
+          <div style="flex:1;display:flex;align-items:center;font-size:${isCompact?'0.85rem':'1rem'}">${fBox}</div>
         </div>
-        <div style="background:var(--card2);border-radius:6px;padding:8px 10px;min-height:58px;display:flex;flex-direction:column">
-          <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px;white-space:nowrap">WIP TOTALE${_detEditMode&&stations.length?' <span style="opacity:.45;font-size:.6rem">(auto)</span>':''}</div>
-          <div style="flex:1;display:flex;align-items:center">${wBox}</div>
+        <div style="background:var(--card2);border-radius:6px;padding:${isCompact?'4px 6px':'8px 10px'};min-height:${isCompact?'44px':'58px'};display:flex;flex-direction:column">
+          <div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;white-space:nowrap">WIP${isCompact?'':' TOTALE'}</div>
+          <div style="flex:1;display:flex;align-items:center;font-size:${isCompact?'0.85rem':'1rem'}">${wBox}</div>
         </div>
       </div>
-      ${stRows?`<div style="font-size:.72rem;color:var(--muted);margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">FLUSSO PRODUZIONE</div>${stRows}`:''}</div>`;
+      ${stRows?`<div style="font-size:.65rem;color:var(--muted);padding-top:6px;border-top:1px solid var(--border);text-transform:uppercase;letter-spacing:0.03em">Flusso</div>${stRows}${addStBtn}`:''}</div>`;
   }
 
   // Raggruppa per progetto e applica grid diverso per ciascuno
@@ -1566,15 +1590,15 @@ function renderDettaglio() {
         📦 Archivia ${projName}
       </button>
     </div>`;
-    return header + `<div style="display:grid;grid-template-columns:${cols};gap:16px;margin-bottom:24px">${comps.map(buildCard).join('')}</div>`;
+
+    let style = `display:grid;grid-template-columns:${cols};gap:16px;margin-bottom:24px`;
+    return header + `<div style="${style}">${comps.map(buildCard).join('')}</div>`;
   }).join('');
 }
 
 function updateStation(input) {
   const key      = input.dataset.key;
   const st       = input.dataset.station;
-  const cardId   = input.dataset.cardid;
-  const stIdx    = input.dataset.stidx;
   const entered  = _parseNum(input.value);
   const qty      = Math.round(entered);
 
@@ -1583,32 +1607,119 @@ function updateStation(input) {
   _modData[key].stazioni[st] = qty;
   input.classList.add('changed');
 
-  // Ricalcola tot_wip da tutte le stazioni del componente
+  // Ricalcola tot_wip
   const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
   let total = 0;
   if (comp) {
-    Object.entries(comp.stazioni || {}).forEach(([stName, data]) => {
-      const stOv = (_modData[key].stazioni || {})[stName];
-      const orig = typeof data === 'object' ? (data.qty||0) : data;
-      total += stOv !== undefined ? stOv : orig;
+    const combinedSt = _getCombinedStazioni(key, comp);
+    Object.values(combinedSt).forEach(data => {
+      total += typeof data === 'object' ? (data.qty||0) : data;
     });
   }
   _modData[key].tot_wip = total;
-  const wipEl = document.getElementById(`det-wip-${cardId}`);
-  if (wipEl) wipEl.value = total;
-  _updateCardBadge(key, cardId);
   _updateBanner();
 }
 
-function updateModDet(input) {
+function _getCombinedStazioni(key, comp) {
+  // Unione delle stazioni originali con eventuali modifiche strutturali (master) e di quantità (overrides)
+  const masterSt = (_modMaster[key] || {}).stazioni || JSON.parse(JSON.stringify(comp.stazioni || {}));
+  const ovSt     = (_modData[key] || {}).stazioni || {};
+  
+  const final = JSON.parse(JSON.stringify(masterSt));
+  Object.keys(final).forEach(stName => {
+    if (ovSt[stName] !== undefined) {
+      if (typeof final[stName] === 'object') final[stName].qty = ovSt[stName];
+      else final[stName] = ovSt[stName];
+    }
+  });
+  return final;
+}
+
+function removeStationFromFlow(key, stName) {
+  if (!confirm(`Rimuovere la stazione "${stName}" da questo flusso?`)) return;
+  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
+  if (!comp) return;
+
+  if (!_modMaster[key]) _modMaster[key] = {};
+  const currentSt = JSON.parse(JSON.stringify((_modMaster[key].stazioni || comp.stazioni || {})));
+  delete currentSt[stName];
+  _modMaster[key].stazioni = currentSt;
+  
+  // Rimuovi anche eventuali override di quantità per quella stazione
+  if (_modData[key] && _modData[key].stazioni) delete _modData[key].stazioni[stName];
+
+  renderDettaglio();
+  _updateBanner();
+}
+
+function addStationToFlow(key) {
+  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
+  if (!comp) return;
+
+  // Suggerimenti stazioni
+  const allSt = new Set();
+  components.forEach(c => Object.keys(c.stazioni || {}).forEach(s => allSt.add(s)));
+  const stListArr = Array.from(allSt).sort();
+  const suggestion = stListArr.slice(0, 10).join(', ') + '...';
+  
+  const newSt = prompt(`Inserisci il nome della stazione da aggiungere. Alcuni esempi esistenti:\n${suggestion}`);
+  if (!newSt || !newSt.trim()) return;
+  const name = newSt.trim();
+
+  if (!_modMaster[key]) _modMaster[key] = {};
+  const currentSt = JSON.parse(JSON.stringify((_modMaster[key].stazioni || comp.stazioni || {})));
+  
+  if (currentSt[name]) { alert('Stazione già presente.'); return; }
+  
+  currentSt[name] = { qty: 0, origin: 'Manuale' };
+  _modMaster[key].stazioni = currentSt;
+
+  renderDettaglio();
+  _updateBanner();
+}
+
+function _updateBanner() {
+  const count = Object.keys(_modData).length + Object.keys(_modMaster).length;
+  const banner = document.getElementById('detChangedBanner');
+  const countEl = document.getElementById('detChangedCount');
+  if (banner && countEl) {
+    banner.style.display = count > 0 ? 'block' : 'none';
+    countEl.textContent = count;
+  }
+}
+
+function updateModMaster(input) {
   const key   = input.dataset.key;
   const field = input.dataset.field;
-  if (!_modData[key]) _modData[key] = {};
-  _modData[key][field] = _parseInt(input.value);
+  if (!_modMaster[key]) _modMaster[key] = {};
+  _modMaster[key][field] = input.value;
   input.classList.add('changed');
-  const comp = components.find(c => (c.progetto||'')+'||'+(c.label||'') === key);
-  if (comp) _updateCardBadge(key, comp.display_order);
   _updateBanner();
+}
+
+async function deleteComponentDirectly(key) {
+  if (!confirm(`Sei sicuro di voler eliminare definitivamente questo componente dal sistema?\n\nKey: ${key}`)) return;
+  showLoader('Eliminazione componente...');
+  try {
+    const r = await fetch('/api/delete-component', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    const res = await r.json();
+    if (res.ok) {
+      loadData().then(() => {
+        loadMaster();
+        hideLoader();
+      });
+    } else {
+      alert('Errore: ' + (res.message || 'operazione fallita'));
+      hideLoader();
+    }
+  } catch(e) {
+    alert('Errore rete: ' + e);
+    hideLoader();
+  }
 }
 
 function _updateCardBadge(key, cardId) {
@@ -1905,14 +2016,29 @@ function saveTargets() {
 }
 
 function saveInventory() {
-  if (Object.keys(_modData).length === 0) { alert('Nessuna modifica da salvare.'); return; }
-  const loader = document.createElement('div');
-  loader.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem";
-  loader.innerHTML = '⏳ Salvataggio e ricalcolo in corso...';
-  document.body.appendChild(loader);
-  fetch('/api/save-inventory', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(_modData) })
-    .then(r => r.json()).then(d => { alert(d.message); location.reload(); })
-    .catch(() => { document.body.removeChild(loader); alert('Errore durante il salvataggio.'); });
+  const count = Object.keys(_modData).length + Object.keys(_modMaster).length;
+  if (count === 0) { alert('Nessuna modifica da salvare.'); return; }
+  
+  showLoader('Salvataggio e ricalcolo in corso...');
+  
+  fetch('/api/save-inventory', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify({
+      overrides: _modData,
+      master: _modMaster
+    }) 
+  })
+  .then(r => r.json())
+  .then(d => { 
+    alert(d.message); 
+    location.reload(); 
+  })
+  .catch(err => { 
+    console.error(err);
+    hideLoader(); 
+    alert('Errore durante il salvataggio: ' + err); 
+  });
 }
 
 // ─── Archivio ───

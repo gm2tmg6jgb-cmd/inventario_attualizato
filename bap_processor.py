@@ -701,11 +701,11 @@ def run(base_dir="."):
     raw_c = load_baseline_data(path("master_data"), path("inventory_baseline"))
 
     print("\n[2] Lettura SAP (opzionale)...")
-    zpp = _read_excel_flexible(path("sap_zpp093"))
-    mb51 = _read_excel_flexible(path("sap_mb51"))
+    zpp_data = parse_sap_zpp093(path("sap_zpp093"))
+    mb51_data = parse_sap_mb51(path("sap_mb51"))
 
     # Elaborazione
-    all_c = process_components(baseline, zpp, mb51, overrides, targets)
+    all_c = calcola_metriche(raw_c, zpp_data, mb51_data)
 
     # Ordinamento (ECO prima, poi il resto)
     ECO_FAM_ORDER = ['DG2','SG1','SG2','SG3','SG4','SG5','SG6','SG7','SG8','SGR','SGRW','RG','FG5','FG57','PIGNON']
@@ -729,7 +729,7 @@ def run(base_dir="."):
         c['display_order'] = i
 
     print("\n[3] Estrazione Matrice P-NUM...")
-    pnum_matrix = load_pnum_matrix(os.path.join(base_dir, "pnumb.xlsx"), zpp)
+    pnum_matrix = load_pnum_matrix(os.path.join(base_dir, "pnumb.xlsx"), zpp_data)
 
     print(f"\n[4] Totale componenti: {len(all_c)}")
 
@@ -737,7 +737,7 @@ def run(base_dir="."):
         "generato_il": datetime.now().isoformat(),
         "componenti": all_c,
         "pnum_matrix": pnum_matrix, # Nuova chiave per la pagina dedicata
-        "sap_disponibile": bool(zpp is not None or mb51 is not None),
+        "sap_disponibile": bool(zpp_data or mb51_data),
         "sap_mapping": {
             "materiali": SAP_MATERIALS_MAP,
             "stazioni": SAP_STATIONS_MAP
