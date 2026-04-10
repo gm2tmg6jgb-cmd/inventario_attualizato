@@ -209,13 +209,47 @@ def supabase_req(method, suffix='', body=None, table=None, prefer=None):
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    """Restituisce i dati elaborati correnti, sincronizzando prima da Supabase."""
+    """Restituisce i dati elaborati correnti, con fallback al file statico del repo."""
     sync_from_supabase()
+    
+    # Priorità: tenta ricalcolo live se ci sono file SAP in /tmp
     try:
+        # Verifica se possiamo ricalcolare (presenza di file SAP minimi)
+        # Se fallisce, usiamo il fallback statico
         result = bap_processor.run(base_dir=TEMP_DIR)
         return jsonify({'data': result})
     except Exception as e:
-        return jsonify({'message': f'Errore: {str(e)}'}), 500
+        print(f"Ricalcolo live fallito o non possibile: {e}. Uso fallback statico.")
+        
+    # FALLBACK: Leggi dati_bap.json dal repository
+    static_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dati_bap.json')
+    try:
+        if os.path.exists(static_file):
+            with open(static_file, 'r', encoding='utf-8') as f:
+                dati = json.load(f)
+            
+            # Applica override dinamici da Supabase (/tmp) sopra i dati statici
+            override_path = os.path.join(TEMP_DIR, 'bap_overrides.json')
+            if os.path.exists(override_path):
+                with open(override_path, 'r', encoding='utf-8') as f:
+                    overrides = json.load(f)
+                
+                # Merge logic (semplificata per il frontend)
+                for c in dati.get('componenti', []):
+                    key = f"{c.get('progetto', '')}||{c.get('label', '')}"
+                    if key in overrides:
+                        ov = overrides[key]
+                        if 'finiti' in ov: c['finiti'] = ov['finiti']
+                        if 'stazioni' in ov:
+                            for st, qty in ov['stazioni'].items():
+                                if 'stazioni' not in c: c['stazioni'] = {}
+                                c['stazioni'][st] = qty
+            
+            return jsonify({'data': dati})
+        else:
+            return jsonify({'message': 'Dati non trovati né live né statici.'}), 404
+    except Exception as e:
+        return jsonify({'message': f'Errore critico: {str(e)}'}), 500
 
 @app.route('/api/upload', methods=['POST'])
 def upload():
