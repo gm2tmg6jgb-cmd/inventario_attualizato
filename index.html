@@ -1006,6 +1006,25 @@ function loadData() {
     .then(json => {
       DATA = json || {};
       components = DATA.components || DATA.componenti || [];
+      
+      // Calcolo preventivo di tot_wip e copertura se mancano (necessario per visualizzazione corretta)
+      components.forEach(c => {
+        if (c.tot_wip === undefined) {
+          let sum = 0;
+          Object.values(c.stazioni || {}).forEach(st => {
+            sum += (typeof st === 'object' ? (st.qty || 0) : (st || 0));
+          });
+          c.tot_wip = sum;
+        }
+        // Calcola o ricalcola copertura gg
+        const daily = c.demand_fd1 || 0;
+        if (daily > 0) {
+          c.gg_copertura_wip_fin = ( (c.finiti || 0) + (c.tot_wip || 0) ) / daily;
+        } else {
+          c.gg_copertura_wip_fin = 0;
+        }
+      });
+
       if (!DATA.projects) {
         DATA.projects = [...new Set(components.map(c => c.progetto))];
       }
