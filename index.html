@@ -1139,38 +1139,44 @@ function renderOverview() {
     if ((c.demand_fd1 || 0) > 0) targetMap[c.progetto].add(c.demand_fd1);
   });
   const projOrder = ['DCT Eco', '8Fe', 'DCT 300'];
-  document.getElementById('targetBoxesContainer').innerHTML = projOrder.map(proj => {
-    const color = pColors[proj] || '#8892a4';
-    const icon = pIcons[proj] || '🔹';
-    const vals = Array.from(targetMap[proj] || []).sort((a,b) => a-b);
-    const label = vals.length === 0 ? '—'
-      : vals.length === 1 ? vals[0].toLocaleString()
-      : vals.map(v => v.toLocaleString()).join(' / ');
-    return `<div class="target-box" style="border-left-color:${color}">
-      <span class="t-proj">${icon} ${proj}</span>
-      <span class="t-value" style="color:${color}">${label}</span>
-      <span class="t-unit">pz / giorno</span>
-    </div>`;
-  }).join('');
+  const targetContainer = document.getElementById('targetBoxesContainer');
+  if (targetContainer) {
+    targetContainer.innerHTML = projOrder.map(proj => {
+      const color = pColors[proj] || '#8892a4';
+      const icon = pIcons[proj] || '🔹';
+      const vals = Array.from(targetMap[proj] || []).sort((a,b) => a-b);
+      const label = vals.length === 0 ? '—'
+        : vals.length === 1 ? vals[0].toLocaleString()
+        : vals.map(v => v.toLocaleString()).join(' / ');
+      return `<div class="target-box" style="border-left-color:${color}">
+        <span class="t-proj">${icon} ${proj}</span>
+        <span class="t-value" style="color:${color}">${label}</span>
+        <span class="t-unit">pz / giorno</span>
+      </div>`;
+    }).join('');
+  }
 
-  document.getElementById('overviewKpiContainer').innerHTML = Object.entries(kpiMap).map(([proj, k]) => {
-    const color = pColors[proj] || '#8892a4';
-    const icon = pIcons[proj] || '🔹';
-    return `
-    <div style="margin-bottom:20px">
-      <h2 style="font-size:1rem;color:${color};font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid ${color}">
-        ${icon} Progetto ${proj}
-      </h2>
-      <div class="kpi-row">
-        <div class="kpi-card" data-proj="${proj}" data-filter="all" title="Clicca per vedere i componenti"><div class="label">Componenti</div><div class="value blue">${k.n_comp}</div></div>
-        <div class="kpi-card" data-proj="${proj}" data-filter="finiti" title="Clicca per vedere i dettagli"><div class="label">Finiti totali</div><div class="value blue">${Math.round(k.finiti).toLocaleString()}</div></div>
-        <div class="kpi-card" data-proj="${proj}" data-filter="wip" title="Clicca per vedere i dettagli"><div class="label">WIP totale</div><div class="value">${Math.round(k.wip).toLocaleString()}</div></div>
-        <div class="kpi-card" data-proj="${proj}" data-filter="rosso" title="Clicca per vedere i critici"><div class="label">🔴 Critici</div><div class="value red">${k.rossi}</div></div>
-        <div class="kpi-card" data-proj="${proj}" data-filter="giallo" title="Clicca per vedere in attenzione"><div class="label">🟡 Attenzione</div><div class="value yellow">${k.gialli}</div></div>
-        <div class="kpi-card" data-proj="${proj}" data-filter="verde" title="Clicca per vedere gli OK"><div class="label">🟢 OK</div><div class="value green">${k.verdi}</div></div>
-      </div>
-    </div>`;
-  }).join('');
+  const kpiContainer = document.getElementById('overviewKpiContainer');
+  if (kpiContainer) {
+    kpiContainer.innerHTML = Object.entries(kpiMap).map(([proj, k]) => {
+      const color = pColors[proj] || '#8892a4';
+      const icon = pIcons[proj] || '🔹';
+      return `
+      <div style="margin-bottom:20px">
+        <h2 style="font-size:1rem;color:${color};font-weight:700;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid ${color}">
+          ${icon} Progetto ${proj}
+        </h2>
+        <div class="kpi-row">
+          <div class="kpi-card" data-proj="${proj}" data-filter="all" title="Clicca per vedere i componenti"><div class="label">Componenti</div><div class="value blue">${k.n_comp}</div></div>
+          <div class="kpi-card" data-proj="${proj}" data-filter="finiti" title="Clicca per vedere i dettagli"><div class="label">Finiti totali</div><div class="value blue">${Math.round(k.finiti).toLocaleString()}</div></div>
+          <div class="kpi-card" data-proj="${proj}" data-filter="wip" title="Clicca per vedere i dettagli"><div class="label">WIP totale</div><div class="value">${Math.round(k.wip).toLocaleString()}</div></div>
+          <div class="kpi-card" data-proj="${proj}" data-filter="rosso" title="Clicca per vedere i critici"><div class="label">🔴 Critici</div><div class="value red">${k.rossi}</div></div>
+          <div class="kpi-card" data-proj="${proj}" data-filter="giallo" title="Clicca per vedere in attenzione"><div class="label">🟡 Attenzione</div><div class="value yellow">${k.gialli}</div></div>
+          <div class="kpi-card" data-proj="${proj}" data-filter="verde" title="Clicca per vedere gli OK"><div class="label">🟢 OK</div><div class="value green">${k.verdi}</div></div>
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   // 2. Chart Copertura (Solo finiti, come richiesto dall'utente)
   const covData = filteredComps.filter(c => (c.gg_copertura_finiti || 0) > 0)
