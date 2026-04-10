@@ -30,6 +30,7 @@ CONFIG = {
     "sap_mapping":       "BAP1.xlsx",
     "output_dashboard":  "dashboard.html",
     "output_json":       "dati_bap.json",
+    "overrides":         "bap_overrides.json",
 }
 
 FAMILY_NAMES = ['SG1','SG2','SG3','SG4','SG5','SG6','SG7','SG8',
@@ -425,9 +426,10 @@ def load_pnum_matrix(filepath, sap_zpp):
 # ═══════════════════════════════════════════════
 # CALCOLO METRICHE
 # ═══════════════════════════════════════════════
-def calcola_metriche(components, sap_zpp=None, sap_mb51=None):
-    sap_zpp  = sap_zpp  or {}
-    sap_mb51 = sap_mb51 or {}
+def calcola_metriche(components, sap_zpp=None, sap_mb51=None, overrides=None):
+    sap_zpp   = sap_zpp   or {}
+    sap_mb51  = sap_mb51  or {}
+    overrides = overrides or {}
 
     for c in components:
         # Recupera codici SAP associati (soft, inter, hard)
@@ -464,6 +466,15 @@ def calcola_metriche(components, sap_zpp=None, sap_mb51=None):
         c['sap_qty_aperta'] = 0
         c['sap_entrate'] = 0
         c['sap_uscite'] = 0
+        
+        # ─── APPLICAZIONE OVERRIDES MANUALI ───
+        comp_key = f"{c.get('progetto', '')}||{c.get('label', '')}"
+        ov = overrides.get(comp_key, {})
+        if 'finiti' in ov: 
+            c['finiti'] = _to_int(ov['finiti'])
+            print(f"    [Override] Finiti per {comp_key}: {c['finiti']}")
+        
+        ov_st = ov.get('stazioni', {})
 
         # ─── ATTUALIZZAZIONE INVENTARIO (WIP & FINITI) ───
         inv_date_str = c.get('data_inv', 'N/D')
@@ -526,16 +537,22 @@ def calcola_metriche(components, sap_zpp=None, sap_mb51=None):
             if not isinstance(data, dict):
                 data = {'qty': _to_int(data)}
             
-            physical_qty = _to_int(data.get('qty', 0))
+            # Se esiste un override per questa stazione, lo usiamo come base fisica
+            physical_qty = _to_int(ov_st.get(st, data.get('qty', 0)))
             
             # Logica WIP Sommata (Inventario + SAP)
             actual_qty = physical_qty + info['qty']
             orig = "Somma (Inv+SAP)" if info['qty'] > 0 else "Manuale"
             
+            # Se abbiamo un override manuale ESPLICITO per la stazione, consideriamolo come origine Manuale
+            if st in ov_st:
+                orig = "Override manuale"
+            
             # Logica di Sincronizzazione (Avanzamento):
             # Se SAP dice che siamo in una fase successiva (es. HARD), 
             # azzeriamo le somme delle fasi precedenti (es. SOFT)
             if tech_idx < max_sap_tech_idx and tech_idx != 99:
+                # Priorità alla sync SAP
                 actual_qty = 0
                 orig = "Sync (Avanzamento)"
 
@@ -550,7 +567,12 @@ def calcola_metriche(components, sap_zpp=None, sap_mb51=None):
 
         c['stazioni'] = new_stazioni
         c['wip_totale'] = total_wip_updated
-        c['tot_wip'] = total_wip_updated
+        
+        # Se c'è un override esplicito per tot_wip (senza stazioni), lo usiamo
+        if 'tot_wip' in ov and not c['stazioni']:
+            c['tot_wip'] = _to_int(ov['tot_wip'])
+        else:
+            c['tot_wip'] = total_wip_updated
 
         # 3. Aggrega Ordini/Aperto SAP (per info generale)
         for role, code in sap_codes.items():
@@ -700,12 +722,21 @@ def run(base_dir="."):
     load_sap_mapping(path("sap_mapping"))
     raw_c = load_baseline_data(path("master_data"), path("inventory_baseline"))
 
-    print("\n[2] Lettura SAP (opzionale)...")
+    print("\n[2] Lettura SAP e Override (opzionale)...")
     zpp_data = parse_sap_zpp093(path("sap_zpp093"))
     mb51_data = parse_sap_mb51(path("sap_mb51"))
+    
+    overrides = {}
+    if os.path.exists(path("overrides")):
+        try:
+            with open(path("overrides"), 'r', encoding='utf-8') as f:
+                overrides = json.load(f)
+            print(f"  -> Caricati {len(overrides)} componenti con override.")
+        except Exception as e:
+            print(f"  [ERRORE] Caricamento override fallito: {e}")
 
     # Elaborazione
-    all_c = calcola_metriche(raw_c, zpp_data, mb51_data)
+    all_c = calcola_metriche(raw_c, zpp_data, mb51_data, overrides)
 
     # Ordinamento (ECO prima, poi il resto)
     ECO_FAM_ORDER = ['DG2','SG1','SG2','SG3','SG4','SG5','SG6','SG7','SG8','SGR','SGRW','RG','FG5','FG57','PIGNON']

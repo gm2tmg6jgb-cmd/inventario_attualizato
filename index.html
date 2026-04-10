@@ -1081,6 +1081,7 @@ function switchTab(name, btn) {
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
   if (name === 'stazioni') renderStazioni();
+  if (name === 'priorita') filterPriority();
   if (name === 'matrix') renderMatrix();
   if (name === 'dettaglio') {
     // seleziona primo tab progetto se nessuno attivo
@@ -1091,6 +1092,7 @@ function switchTab(name, btn) {
   if (name === 'mapping') renderMapping();
   if (name === 'vincoli') renderVincoli();
   if (name === 'pnum') renderPnumFlow();
+  if (name === 'boxes') renderBoxes();
   if (name === 'archivio') { loadArchiveConfig(); loadArchiveList(); }
 }
 
@@ -1798,6 +1800,20 @@ function updateModMaster(input) {
   _modMaster[key][field] = input.value;
   input.classList.add('changed');
   _updateBanner();
+}
+
+function updateModDet(input) {
+  const key    = input.dataset.key;
+  const field  = input.dataset.field;
+  const val    = _parseNum(input.value);
+  const cardId = input.id.split('-').pop();
+
+  if (!_modData[key]) _modData[key] = {};
+  _modData[key][field] = val;
+  input.classList.add('changed');
+  
+  _updateBanner();
+  _updateCardBadge(key, cardId);
 }
 
 async function deleteComponentDirectly(key) {

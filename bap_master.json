@@ -18,7 +18,125 @@
       "Grinding rz14",
       "Da lavare",
       "Finiti"
-    ]
+    ],
+    "stazioni": {
+      "Laser W sca06 (151)": {
+        "qty": 0,
+        "sap_ops": [
+          "M00015",
+          "150"
+        ],
+        "sap_qty": 0,
+        "origin": "Sync (Avanzamento)",
+        "tech": "SOFT"
+      },
+      "UT mza05": {
+        "qty": 480,
+        "sap_ops": [
+          "10",
+          "20",
+          "60"
+        ],
+        "sap_qty": 480,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Hobbing frw78": {
+        "qty": 2880,
+        "sap_ops": [
+          "80",
+          "90",
+          "105"
+        ],
+        "sap_qty": 2880,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Deburring egw08": {
+        "qty": 2514,
+        "sap_ops": [
+          "90",
+          "110",
+          "45"
+        ],
+        "sap_qty": 2514,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Da Trattare": {
+        "qty": 1554,
+        "sap_ops": [
+          "100",
+          "240"
+        ],
+        "sap_qty": 1554,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "HT - (240)": {
+        "qty": 1554,
+        "sap_ops": [
+          "100",
+          "240"
+        ],
+        "sap_qty": 1554,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Pallinatura": {
+        "qty": 1554,
+        "sap_ops": [
+          "110"
+        ],
+        "sap_qty": 1554,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "TERMICO"
+      },
+      "Emag dra110/111": {
+        "qty": 480,
+        "sap_ops": [
+          "10",
+          "20",
+          "60"
+        ],
+        "sap_qty": 480,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Grinding rz14": {
+        "qty": 2142,
+        "sap_ops": [
+          "101",
+          "119",
+          "120",
+          "230"
+        ],
+        "sap_qty": 2142,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "TERMICO"
+      },
+      "Da lavare": {
+        "qty": 1380,
+        "sap_ops": [
+          "220",
+          "250"
+        ],
+        "sap_qty": 1380,
+        "origin": "Somma (Inv+SAP)",
+        "tech": "ALTRO"
+      },
+      "Finiti": {
+        "qty": 0,
+        "sap_ops": [],
+        "sap_qty": 0,
+        "origin": "Manuale",
+        "tech": "ALTRO"
+      },
+      "Test Station": {
+        "qty": 0,
+        "origin": "Manuale"
+      }
+    }
   },
   {
     "progetto": "DCT Eco",
@@ -105,7 +223,7 @@
   {
     "progetto": "DCT Eco",
     "famiglia": "RG",
-    "label": "RG -FD1",
+    "label": "RG - FD1",
     "codice_hard": "FD1",
     "codice_s": "M0162587/S",
     "demand_fd1": 900,
@@ -228,7 +346,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG6",
-    "label": "SG6-M0153388-790",
+    "label": "SG6",
     "codice_hard": "M0153387",
     "codice_s": "M0153387/S",
     "demand_fd1": 370,
@@ -248,7 +366,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG7",
-    "label": "SG7-M0153404-790",
+    "label": "SG7",
     "codice_hard": "M0155201",
     "codice_s": "M0155201/S",
     "demand_fd1": 370,
@@ -269,7 +387,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG8",
-    "label": "SG8-M0153398-790",
+    "label": "SG8",
     "codice_hard": "M0153397",
     "codice_s": "M0153397/S",
     "demand_fd1": 370,
@@ -289,7 +407,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SGR",
-    "label": "SGR-M0153392-790",
+    "label": "SGR",
     "codice_hard": "M0153391",
     "codice_s": "M0153391/S",
     "demand_fd1": 370,
@@ -308,7 +426,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "PG",
-    "label": "PG-M0154996-790",
+    "label": "PG",
     "codice_hard": "M0154996",
     "codice_s": "M0154996/S",
     "demand_fd1": 370,
@@ -328,7 +446,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "FG5/7",
-    "label": "FG5/7- M0153383-790",
+    "label": "FG5/7",
     "codice_hard": "M0155197",
     "codice_s": "M0155197/S",
     "demand_fd1": 370,
@@ -348,7 +466,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "RG FD1",
-    "label": "RG FD1-M0153407-791",
+    "label": "RG - FD1",
     "codice_hard": "M0153407",
     "codice_s": "M0153407/S",
     "demand_fd1": 370,
@@ -368,7 +486,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "RG FD2",
-    "label": "RG FD2-M0153703-791",
+    "label": "RG - FD2",
     "codice_hard": "M0153703",
     "codice_s": "M0153703/S",
     "demand_fd1": 370,
@@ -388,7 +506,7 @@
   {
     "progetto": "DCT 300",
     "famiglia": "SG1",
-    "label": "SG1-2511108150",
+    "label": "SG1",
     "codice_hard": "2511108150",
     "codice_s": "2511108150/S",
     "demand_fd1": 1200,
@@ -408,7 +526,7 @@
   {
     "progetto": "DCT 300",
     "famiglia": "SG1",
-    "label": "SG1-2511124450",
+    "label": "SG1",
     "codice_hard": "2511124450",
     "codice_s": "2511124450/S",
     "demand_fd1": 1200,
