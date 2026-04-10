@@ -233,32 +233,35 @@ def supabase_req(method, suffix='', body=None, table=None, prefer=None):
 
 @app.route('/api/data', methods=['GET'])
 def get_data():
-    """Restituisce i dati elaborati correnti, con fallback al file statico del repo."""
+    """Restituisce i dati elaborati correnti, dando priorità al JSON pre-calcolato."""
     sync_from_supabase()
     
-    # Priorità: tenta ricalcolo live se ci sono file SAP in /tmp
-    try:
-        # Verifica se possiamo ricalcolare (presenza di file SAP minimi)
-        # Se fallisce, usiamo il fallback statico
-        result = bap_processor.run(base_dir=TEMP_DIR)
-        return jsonify({'data': result})
-    except Exception as e:
-        print(f"Ricalcolo live fallito o non possibile: {e}. Uso fallback statico.")
-        
-    # FALLBACK: Leggi dati_bap.json dal repository
-    static_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dati_bap.json')
-    try:
-        if os.path.exists(static_file):
-            with open(static_file, 'r', encoding='utf-8') as f:
-                dati = json.load(f)
-            
-            # Applica override dinamici da Supabase (/tmp) sopra i dati statici
+    # 1. Tenta prima di caricare il JSON pre-calcolato (molto più affidabile su Vercel)
+    precalc_sources = [
+        os.path.join(TEMP_DIR, 'dati_bap.json'),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dati_bap.json')
+    ]
+    
+    dati = None
+    for path in precalc_sources:
+        if os.path.exists(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    dati = json.load(f)
+                    print(f"Dati caricati da: {path}")
+                    break
+            except Exception as e:
+                print(f"Errore lettura {path}: {e}")
+
+    # 2. Se abbiamo i dati, applichiamo gli override e restituiamo
+    if dati:
+        try:
+            # Applica override dinamici da Supabase (/tmp) sopra i dati caricati
             override_path = os.path.join(TEMP_DIR, 'bap_overrides.json')
             if os.path.exists(override_path):
                 with open(override_path, 'r', encoding='utf-8') as f:
                     overrides = json.load(f)
                 
-                # Merge logic (semplificata per il frontend)
                 for c in dati.get('componenti', []):
                     key = f"{c.get('progetto', '')}||{c.get('label', '')}"
                     if key in overrides:
@@ -270,11 +273,17 @@ def get_data():
                                 c['stazioni'][st] = qty
             
             return jsonify({'data': dati})
-        else:
-            return jsonify({'message': 'Dati non trovati né live né statici.'}), 404
+        except Exception as e:
+            print(f"Errore applicazione override: {e}")
+
+    # 3. FALLBACK: Tenta ricalcolo live solo se il JSON manca o è corrotto
+    try:
+        print("Tento ricalcolo live come fallback...")
+        result = bap_processor.run(base_dir=TEMP_DIR)
+        return jsonify({'data': result})
     except Exception as e:
         error_info = {
-            'message': f'Errore critico backend: {str(e)}',
+            'message': f'Errore critico backend (ricalcolo fallito): {str(e)}',
             'traceback': traceback.format_exc(),
             'temp_dir_contents': os.listdir(TEMP_DIR) if os.path.exists(TEMP_DIR) else 'TEMP_DIR not found'
         }
