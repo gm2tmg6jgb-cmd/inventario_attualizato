@@ -313,6 +313,7 @@
     <button class="tab-btn" onclick="switchTab('vincoli', this)">⛓️ Vincoli</button>
     <button class="tab-btn" onclick="switchTab('mapping', this)">🛠️ Mappatura SAP</button>
     <button class="tab-btn" onclick="switchTab('sap', this)">📥 Import SAP</button>
+    <button class="tab-btn" onclick="switchTab('boxes', this)">🗃️ Anagrafica Box</button>
   </div>
 
   <!-- ═══════════════════════════════ OVERVIEW ═══════════════════════════════ -->
@@ -884,6 +885,30 @@ create policy "anon all" on bap_archivio for all using (true) with check (true);
     <div id="archiveTimeline"></div>
   </div>
 
+  <!-- ANAGRAFICA BOX -->
+  <div id="tab-boxes" class="tab-pane">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;margin-top:20px">
+      <h2>🗃️ Anagrafica Registro Box</h2>
+      <button class="btn" onclick="showAddBoxModal()">➕ Aggiungi Nuova Box</button>
+    </div>
+    <div class="chart-card">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Progetto</th>
+              <th>Famiglia</th>
+              <th>Etichetta (Label)</th>
+              <th>Codici (Hard/Soft)</th>
+              <th style="width:50px"></th>
+            </tr>
+          </thead>
+          <tbody id="tblBoxesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- ═══ MODAL ARCHIVIO ═══ -->
@@ -919,6 +944,52 @@ create policy "anon all" on bap_archivio for all using (true) with check (true);
         </thead>
         <tbody id="modalBody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL BOX (ANAGRAFICA) ═══ -->
+<div id="boxModal" class="modal-overlay" onclick="if(event.target===this)closeBoxModal()">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-header">
+      <span class="modal-title">🔨 Aggiungi Nuova Box</span>
+      <button class="modal-close" onclick="closeBoxModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Progetto</label>
+          <select id="boxProj" class="mod-input" style="width:100%">
+            <option value="DCT Eco">DCT Eco</option>
+            <option value="8Fe">8Fe</option>
+            <option value="DCT 300">DCT 300</option>
+          </select>
+        </div>
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Famiglia</label>
+          <input type="text" id="boxFamily" class="mod-input" placeholder="es. SG1, SG2" style="width:100%">
+        </div>
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Etichetta (Label)</label>
+          <input type="text" id="boxLabel" class="mod-input" placeholder="es. DCT EVO 48V" style="width:100%">
+        </div>
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Codice Hard</label>
+          <input type="text" id="boxHard" class="mod-input" style="width:100%">
+        </div>
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Codice Soft</label>
+          <input type="text" id="boxSoft" class="mod-input" style="width:100%">
+        </div>
+        <div class="filter-group" style="display:flex;flex-direction:column;align-items:flex-start">
+          <label>Stazioni (separate da virgola)</label>
+          <textarea id="boxStations" class="mod-input" rows="3" placeholder="Stazione 1, Stazione 2..." style="width:100%;font-family:inherit;padding:8px"></textarea>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+        <button class="btn secondary" onclick="closeBoxModal()">Annulla</button>
+        <button class="btn" onclick="saveNewBox()">💾 Salva Box</button>
+      </div>
     </div>
   </div>
 </div>

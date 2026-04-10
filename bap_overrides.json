@@ -4,5 +4,17 @@
       "UT mza05": 999
     },
     "tot_wip": 15057
+  },
+  "DCT Eco||SG4": {
+    "stazioni": {
+      "Shaping stw07": 1000
+    },
+    "tot_wip": 2680
+  },
+  "DCT Eco||SG3": {
+    "stazioni": {
+      "Laser W sca78(151)": 150
+    },
+    "tot_wip": 21903
   }
 }

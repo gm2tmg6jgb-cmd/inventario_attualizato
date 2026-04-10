@@ -266,23 +266,48 @@ def save_targets():
 @app.route('/api/save-inventory', methods=['POST'])
 def save_inventory():
     data = request.json
-    override_path = os.path.join(TEMP_DIR, 'bap_overrides.json')
+    # Gestione compatibile con la nuova logica "combined" (overrides + master)
+    ov_data = data.get('overrides', data) # Fallback se data è già l'oggetto override
+    ma_data = data.get('master', {})
     
-    existing = {}
+    # 1. Salva Overrides
+    override_path = os.path.join(TEMP_DIR, 'bap_overrides.json')
+    existing_ov = {}
     if os.path.exists(override_path):
         with open(override_path, 'r', encoding='utf-8') as f:
-            existing = json.load(f)
-    
-    existing.update(data)
+            existing_ov = json.load(f)
+    existing_ov.update(ov_data)
     with open(override_path, 'w', encoding='utf-8') as f:
-        json.dump(existing, f, ensure_ascii=False, indent=2)
+        json.dump(existing_ov, f, ensure_ascii=False, indent=2)
         
+    # 2. Salva Master (se presente nella richiesta combinata)
+    if ma_data:
+        master_path = os.path.join(TEMP_DIR, 'bap_master.json')
+        if not os.path.exists(master_path):
+            master_path_orig = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'bap_master.json')
+            if os.path.exists(master_path_orig):
+                import shutil
+                shutil.copy2(master_path_orig, master_path)
+        
+        if os.path.exists(master_path):
+            with open(master_path, 'r', encoding='utf-8') as f:
+                master_list = json.load(f)
+            updated = 0
+            for key, mods in ma_data.items():
+                for item in master_list:
+                    if (item.get('progetto','') + '||' + item.get('label','')) == key:
+                        item.update(mods)
+                        updated += 1
+                        break
+            if updated > 0:
+                with open(master_path, 'w', encoding='utf-8') as f:
+                    json.dump(master_list, f, ensure_ascii=False, indent=2)
+
     sync_to_supabase()
     
-    # Rielabora
     try:
         result = bap_processor.run(base_dir=TEMP_DIR)
-        return jsonify({'message': 'Inventario salvato.', 'data': result})
+        return jsonify({'message': 'Salvataggio completato.', 'data': result})
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
@@ -312,7 +337,7 @@ def save_master():
     
     try:
         result = bap_processor.run(base_dir=TEMP_DIR)
-        return jsonify({'message': 'Master aggiornato.', 'data': result})
+        return jsonify({'message': 'Registro Master aggiornato.', 'data': result})
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 

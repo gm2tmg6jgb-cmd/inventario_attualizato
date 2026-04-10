@@ -630,6 +630,23 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {'message': f'Errore salvataggio baseline: {e}'})
 
+        elif self.path == '/api/save-master':
+            fname = 'bap_master.json'
+            tmp = fname + '.tmp'
+            with open(tmp, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, fname)
+            print(f'[{ts_str}] Register Master salvato: {len(data)} componenti')
+            
+            # Ricalcola
+            ok, msg = self._run_processor()
+            print(f'[{ts_str}] {"✅" if ok else "❌"} {msg}')
+            
+            # Restituisci i dati aggiornati
+            with open('dati_bap.json', 'r', encoding='utf-8') as f:
+                res_data = json.load(f)
+            self._json_response(200, {'message': 'Master salvato con successo', 'data': res_data})
+
         else:
             self.send_error(404, 'Not Found')
 

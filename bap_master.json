@@ -144,7 +144,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG2",
-    "label": "SG2-M0153390-790",
+    "label": "SG2",
     "codice_hard": "M0153389",
     "codice_s": "M0153389/S",
     "demand_fd1": 370,
@@ -165,7 +165,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG3",
-    "label": "SG3-M0153402-790",
+    "label": "SG3",
     "codice_hard": "M0153401",
     "codice_s": "M0153401/S",
     "demand_fd1": 370,
@@ -187,7 +187,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG4",
-    "label": "SG4-M0153400-791",
+    "label": "SG4",
     "codice_hard": "M0170686",
     "codice_s": "M0170686/S",
     "demand_fd1": 370,
@@ -208,7 +208,7 @@
   {
     "progetto": "8Fe",
     "famiglia": "SG5",
-    "label": "SG5-M0153394-790",
+    "label": "SG5",
     "codice_hard": "M0155199",
     "codice_s": "M0155199/S",
     "demand_fd1": 370,
