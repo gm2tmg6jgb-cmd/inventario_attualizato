@@ -16,5 +16,23 @@
       "Laser W sca78(151)": 150
     },
     "tot_wip": 21903
+  },
+  "DCT Eco||SGR": {
+    "stazioni": {
+      "Laser W sca06 (151)": 1000
+    },
+    "tot_wip": 13801
+  },
+  "DCT Eco||RG - FD1": {
+    "stazioni": {
+      "Soft Turning dra44": 1000
+    },
+    "tot_wip": 1000
+  },
+  "8Fe||SG6": {
+    "stazioni": {
+      "Soft Turning dra69/70": 1000
+    },
+    "tot_wip": 5767
   }
 }

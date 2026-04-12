@@ -548,10 +548,9 @@ def calcola_metriche(components, sap_zpp=None, sap_mb51=None, overrides=None):
             if st in ov_st:
                 orig = "Override manuale"
             
-            # Logica di Sincronizzazione (Avanzamento):
             # Se SAP dice che siamo in una fase successiva (es. HARD), 
-            # azzeriamo le somme delle fasi precedenti (es. SOFT)
-            if tech_idx < max_sap_tech_idx and tech_idx != 99:
+            # azzeriamo le somme delle fasi precedenti (es. SOFT), A MENO CHE non ci sia un override manuale
+            if tech_idx < max_sap_tech_idx and tech_idx != 99 and st not in ov_st:
                 # Priorità alla sync SAP
                 actual_qty = 0
                 orig = "Sync (Avanzamento)"

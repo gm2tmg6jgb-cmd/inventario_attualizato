@@ -163,6 +163,27 @@
 
   .sap-notice strong { color: var(--yellow); }
 
+  /* Premium Inventari Cards */
+  .card-det {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 14px;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-det:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  }
+  .card-det::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    background: var(--accent); opacity: 0; transition: opacity 0.2s;
+  }
+  .card-det:hover::before { opacity: 1; }
+
   /* Import Slots */
   .import-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
   .import-slot {
@@ -1614,58 +1635,82 @@ function renderDettaglio() {
       const stV  = stOv !== undefined ? stOv : q;
       const stE  = st.replace(/"/g,'&quot;').replace(/'/g, "\\'");
       
-      let origIcon = '📋';
-      if (orig === 'SAP') origIcon = '🔄';
-      else if (orig.includes('Avanzamento')) origIcon = '⏭️';
+      let origIcon = (orig === 'SAP' || orig.includes('Sync')) ? '🔄' : '📋';
 
       let qCell;
       if (_detEditMode) {
         qCell = `<input type="number" min="0" value="${stV}"
-          class="mod-input${stOv!==undefined?' changed':''}" style="width:62px;height:22px;font-size:0.75rem"
+          class="mod-input${stOv!==undefined?' changed':''}" style="width:58px;height:20px;font-size:0.75rem;padding:2px 4px"
           data-key="${keyEsc}" data-station="${stE}" data-cardid="${cardId}"
-          data-rack-size="0" onfocus="this.select()" oninput="updateStation(this)">`;
+          onfocus="this.select()" oninput="updateStation(this)">`;
       } else {
-        const disp = `<span style="color:${stV>0?'var(--accent)':'var(--muted)'}">${stV===0?'-':stV.toLocaleString()}</span>`;
-        qCell = `<div style="display:flex; align-items:center; gap:4px">
-                   <span title="Origine: ${orig}" style="font-size:0.6rem;opacity:0.5">${origIcon}</span>
-                   <span style="font-weight:700;text-align:right;min-width:35px">${disp}</span>
-                 </div>`;
+        qCell = `<span style="font-weight:700;color:${stV>0?'var(--accent)':'var(--muted)'};min-width:35px;text-align:right">${stV===0?'-':stV.toLocaleString()}</span>`;
       }
+
       const delStBtn = _detEditMode ? `<button onclick="removeStationFromFlow(this)" data-key="${keyEsc}" data-station="${stE}" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:0.7rem;padding:0 2px;opacity:0.6" title="Rimuovi Stazione">✕</button>` : '';
 
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;font-size:${isCompact?'0.7rem':'.75rem'};border-bottom:1px solid rgba(255,255,255,0.04)">
-        <div style="display:flex;align-items:center;gap:4px;overflow:hidden">
+      return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03)">
+        <div style="display:flex;align-items:center;gap:6px;overflow:hidden;flex:1">
           ${delStBtn}
           <div style="display:flex;flex-direction:column;overflow:hidden">
-            <span style="color:${stV>0?'var(--text)':'var(--muted)'};white-space:nowrap;text-overflow:ellipsis;overflow:hidden">${st}</span>
-            ${!isCompact && ops.length?`<span style="font-size:.62rem;color:var(--accent);opacity:0.8">SAP: ${ops.join(', ')}</span>`:''}
+            <span style="color:${stV>0?'var(--text)':'var(--muted)'};white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:0.75rem">${st}</span>
+            ${ops.length ? `<span style="font-size:0.6rem;color:var(--accent);opacity:0.7">SAP: ${ops.join(', ')}</span>` : ''}
           </div>
         </div>
-        ${qCell}
+        <div style="display:flex;align-items:center;gap:6px">
+          <span title="Origine: ${orig}" style="font-size:0.6rem;opacity:0.4">${origIcon}</span>
+          ${qCell}
+        </div>
       </div>`;
     }).join('');
 
     const addStBtn = _detEditMode ? `
-      <button onclick="addStationToFlow(this)" data-key="${keyEsc}" style="background:none;border:1px dashed var(--border);color:var(--muted);width:100%;padding:4px;font-size:0.65rem;border-radius:4px;cursor:pointer;margin-top:6px">
+      <button onclick="addStationToFlow(this)" data-key="${keyEsc}" 
+        style="background:none;border:1px dashed var(--border);color:var(--muted);width:100%;padding:6px;font-size:0.65rem;border-radius:6px;cursor:pointer;margin-top:8px">
         ➕ Aggiungi Stazione
       </button>` : '';
 
-    const padding = isCompact ? '10px' : '16px';
-    return `<div id="det-card-${cardId}" style="background:var(--card);border:1px solid ${modified?'var(--yellow)':'var(--border)'};border-radius:10px;padding:${padding};border-top:4px solid ${col};display:flex;flex-direction:column;height:100%">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:${isCompact?'6px':'10px'}">
-        ${metaHtml}
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:${isCompact?'8px':'12px'}">
-        <div style="background:var(--card2);border-radius:6px;padding:${isCompact?'4px 6px':'8px 10px'};min-height:${isCompact?'44px':'58px'};display:flex;flex-direction:column">
-          <div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;white-space:nowrap">FINITI</div>
-          <div style="flex:1;display:flex;align-items:center;font-size:${isCompact?'0.85rem':'1rem'}">${fBox}</div>
+    const showFam = (c.famiglia && c.famiglia !== c.label);
+    
+    return `
+    <div class="card-det" id="det-card-${cardId}" style="border-left:4px solid ${col}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start">
+        <div style="flex:1">
+          <div style="font-size:1.15rem; font-weight:800; line-height:1.1; color:var(--text); letter-spacing:-0.012em">${c.label}</div>
+          <div style="margin-top:6px; display:flex; flex-direction:column; gap:1px">
+            ${showFam ? `<div style="font-size:0.65rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; opacity:0.7">${c.famiglia}</div>` : ''}
+            <div style="font-size:0.8rem; color:var(--accent); font-weight:700; font-family:var(--font-mono, monospace); letter-spacing:0.02em">${c.codice_s||'-'}</div>
+            <div style="font-size:0.75rem; color:var(--muted); font-weight:500; font-family:var(--font-mono, monospace); opacity:0.8">${c.codice_hard||'-'}</div>
+          </div>
+          ${_detEditMode ? `<div style="display:flex; gap:8px; margin-top:8px">
+             <button class="btn secondary" style="padding:2px 8px; font-size:.7rem" onclick="addStationToFlow(this)" data-key="${keyEsc}">➕ Stazione</button>
+             <button class="btn" style="padding:2px 8px; font-size:.7rem; background:rgba(220,53,69,0.1); color:var(--red); border:1px solid rgba(220,53,69,0.2)" onclick="deleteComponentDirectly('${keyEsc}')">🗑️ Elimina</button>
+          </div>` : ''}
         </div>
-        <div style="background:var(--card2);border-radius:6px;padding:${isCompact?'4px 6px':'8px 10px'};min-height:${isCompact?'44px':'58px'};display:flex;flex-direction:column">
-          <div style="font-size:.6rem;color:var(--muted);margin-bottom:2px;white-space:nowrap">WIP${isCompact?'':' TOTALE'}</div>
-          <div style="flex:1;display:flex;align-items:center;font-size:${isCompact?'0.85rem':'1rem'}">${wBox}</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">
+          <span id="det-badge-${cardId}" class="badge ${c.semaforo||'verde'}">${gg.toFixed(1)} gg</span>
+          <div style="font-size:0.6rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em">${c.progetto}</div>
         </div>
       </div>
-      ${stRows?`<div style="font-size:.65rem;color:var(--muted);padding-top:6px;border-top:1px solid var(--border);text-transform:uppercase;letter-spacing:0.03em">Flusso</div>${stRows}${addStBtn}`:''}</div>`;
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:4px">
+         <div style="padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.04)">
+            <div style="font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px">Pezzi Finiti</div>
+            ${fBox}
+         </div>
+         <div style="padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.04)">
+            <div style="font-size:0.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px">WIP Totale</div>
+            ${wBox}
+         </div>
+      </div>
+
+      <div style="margin-top:6px; flex:1">
+          ${stations.length ? `<div style="font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid var(--border); padding-bottom:4px; margin-bottom:4px">Flusso Stazioni</div>` : ''}
+          ${stRows}
+          ${addStBtn}
+      </div>
+    </div>`;
   }
 
   // Raggruppa per progetto e applica grid diverso per ciascuno
@@ -1763,21 +1808,30 @@ function addStationToFlow(btn) {
   if (!comp) return;
 
   const allSt = new Set();
-  components.forEach(c => Object.keys(c.stazioni || {}).forEach(s => allSt.add(s)));
+  components.forEach(c => {
+    if (c.stazioni) {
+      Object.keys(c.stazioni).forEach(s => allSt.add(s));
+    }
+  });
   const stListArr = Array.from(allSt).sort();
-  const suggestion = stListArr.slice(0, 10).join(', ') + '...';
+  const suggestion = stListArr.slice(0, 8).join(', ') + '...';
   
-  const newSt = prompt(`Inserisci il nome della stazione da aggiungere. Alcuni esempi esistenti:\n${suggestion}`);
+  const newSt = prompt(`Inserisci il nome della stazione da aggiungere. Esempi:\n${suggestion}`);
   if (!newSt || !newSt.trim()) return;
   const name = newSt.trim();
 
   if (!_modMaster[key]) _modMaster[key] = {};
-  const currentSt = JSON.parse(JSON.stringify((_modMaster[key].stazioni || comp.stazioni || {})));
+  // Inizializza con le stazioni correnti se non ancora presenti nei mod
+  if (!_modMaster[key].stazioni) {
+    _modMaster[key].stazioni = JSON.parse(JSON.stringify(comp.stazioni || {}));
+  }
   
-  if (currentSt[name]) { alert('Stazione già presente.'); return; }
+  if (_modMaster[key].stazioni[name]) { 
+    alert('Stazione già presente in questo flusso.'); 
+    return; 
+  }
   
-  currentSt[name] = { qty: 0, origin: 'Manuale' };
-  _modMaster[key].stazioni = currentSt;
+  _modMaster[key].stazioni[name] = { qty: 0, origin: 'Manuale' };
 
   renderDettaglio();
   _updateBanner();
@@ -2129,9 +2183,44 @@ function saveTargets() {
     'DCT 300': _parseInt(document.getElementById('t_dct300').value),
   };
   if (Object.values(targets).every(v => v === 0)) { alert('Inserisci almeno un valore.'); return; }
-  fetch('/api/save-targets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(targets) })
-    .then(r => r.json()).then(d => { alert(d.message); location.reload(); })
-    .catch(() => alert('Errore durante il salvataggio dei target.'));
+  
+  showLoader('Salvataggio target...');
+  fetch('/api/save-targets', { 
+    method: 'POST', 
+    headers: { 'Content-Type': 'application/json' }, 
+    body: JSON.stringify(targets) 
+  })
+    .then(r => r.json())
+    .then(res => { 
+      hideLoader();
+      if (res.data) {
+        DATA = res.data;
+        components = DATA.componenti || [];
+        renderAll();
+
+        // Auto-salvataggio su Supabase
+        const now = new Date();
+        const ts  = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+        const label = 'Autosave Target — ' + ts;
+        fetch('/api/archive-save', {
+          method: 'POST', 
+          headers: {'Content-Type':'application/json'}, 
+          body: JSON.stringify({label}) 
+        })
+        .then(ar => ar.json())
+        .then(act => {
+          console.log('Archivio Supabase (Target):', act.message);
+          if (typeof loadArchiveList === 'function') loadArchiveList();
+        })
+        .catch(e => console.warn('Errore autarchiviazione Target:', e));
+      } else {
+        location.reload();
+      }
+    })
+    .catch(() => {
+      hideLoader();
+      alert('Errore durante il salvataggio dei target.');
+    });
 }
 
 function saveInventory() {
@@ -2149,9 +2238,50 @@ function saveInventory() {
     }) 
   })
   .then(r => r.json())
-  .then(d => { 
-    alert(d.message); 
-    location.reload(); 
+  .then(res => { 
+    hideLoader();
+    if (res.data) {
+      // Aggiorna dati globali senza ricaricare
+      DATA = res.data;
+      components = DATA.componenti || [];
+      
+      // Esci da edit mode e pulisci i mod
+      _detEditMode = false;
+      _modData = {};
+      _modMaster = {};
+      
+      const btn = document.getElementById('detEditBtn');
+      if (btn) {
+        btn.textContent = '✏️ Modifica';
+        btn.className = 'btn secondary';
+      }
+      document.getElementById('detSaveBtn').style.display = 'none';
+      document.getElementById('detResetBtn').style.display = 'none';
+      _updateBanner();
+
+      // Ricalcola tutto rimanendo nel tab corrente
+      renderAll();
+      console.log('Salvataggio completato e dati aggiornati.');
+      
+      // Auto-salvataggio su Supabase
+      const now = new Date();
+      const ts  = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      const label = 'Autosave Modifica Manuale — ' + ts;
+      
+      fetch('/api/archive-save', {
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'}, 
+        body: JSON.stringify({label}) 
+      })
+      .then(ar => ar.json())
+      .then(act => {
+        console.log('Registrato in Archivio Supabase:', act.message);
+        if (typeof loadArchiveList === 'function') loadArchiveList();
+      })
+      .catch(e => console.warn('Errore autarchiviazione Supabase:', e));
+    } else {
+      location.reload(); 
+    }
   })
   .catch(err => { 
     console.error(err);
@@ -2462,6 +2592,22 @@ function saveMaster() {
     renderAll();
     renderBoxes();
     hideLoader();
+    
+    // Auto-salvataggio su Supabase dopo edit master
+    const now = new Date();
+    const ts  = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+    const label = 'Autosave Modifica Master — ' + ts;
+    fetch('/api/archive-save', {
+      method: 'POST', 
+      headers: {'Content-Type':'application/json'}, 
+      body: JSON.stringify({label}) 
+    })
+    .then(ar => ar.json())
+    .then(act => {
+      console.log('Archivio Supabase (Master):', act.message);
+      if (typeof loadArchiveList === 'function') loadArchiveList();
+    })
+    .catch(e => console.warn('Errore autarchiviazione:', e));
   })
   .catch(err => {
     alert('Errore nel salvataggio del master: ' + err);

@@ -400,12 +400,25 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                     if os.path.exists(fname_ov):
                         with open(fname_ov, 'r', encoding='utf-8') as f:
                             existing_ov = json.load(f)
-                    existing_ov.update(ov_data)
+                    for k, v in ov_data.items():
+                        if k not in existing_ov:
+                            existing_ov[k] = v
+                        else:
+                            # Merge profondo (stazioni + altri campi)
+                            if 'stazioni' in v:
+                                if 'stazioni' not in existing_ov[k]:
+                                    existing_ov[k]['stazioni'] = {}
+                                existing_ov[k]['stazioni'].update(v['stazioni'])
+                            if 'finiti' in v:
+                                existing_ov[k]['finiti'] = v['finiti']
+                            if 'tot_wip' in v:
+                                existing_ov[k]['tot_wip'] = v['tot_wip']
+                    
                     tmp_ov = fname_ov + '.tmp'
                     with open(tmp_ov, 'w', encoding='utf-8') as f:
                         json.dump(existing_ov, f, ensure_ascii=False, indent=2)
                     os.replace(tmp_ov, fname_ov)
-                    print(f'[{ts_str}] Override salvati: {len(ov_data)} componenti')
+                    print(f'[{ts_str}] Override salvati (merge): {len(ov_data)} componenti')
 
                 # 2. Salva modifiche Master (struttura)
                 if ma_data:
@@ -420,6 +433,16 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
                             for item in master_list:
                                 if (item.get('progetto','') + '||' + item.get('label','')) == key:
                                     item.update(mods)
+                                    
+                                    # SINCRONIZZA stazioni_list con le chiavi di stazioni (se presente)
+                                    if 'stazioni' in mods:
+                                        if 'stazioni_list' not in item:
+                                            item['stazioni_list'] = []
+                                        # Aggiungi solo le stazioni mancanti preservando l'ordine
+                                        for st_name in mods['stazioni'].keys():
+                                            if st_name not in item['stazioni_list']:
+                                                item['stazioni_list'].append(st_name)
+                                                
                                     updated_count += 1
                                     break
                         
@@ -432,7 +455,14 @@ class UploadHandler(http.server.SimpleHTTPRequestHandler):
 
             ok, msg = self._run_processor()
             print(f'[{ts_str}] {"✅" if ok else "❌"} {msg}')
-            self._json_response(200, {'message': msg})
+            
+            # Restituisci anche i dati freschi per permettere al frontend di aggiornarsi
+            res_data = {}
+            if os.path.exists('dati_bap.json'):
+                with open('dati_bap.json', 'r', encoding='utf-8') as f:
+                    res_data = json.load(f)
+            
+            self._json_response(200, {'message': msg, 'data': res_data})
 
         elif self.path == '/api/archive-save':
             label     = data.get('label', '').strip()[:80]

@@ -1,5 +1,5 @@
 {
-  "generato_il": "2026-04-10T23:53:39.323733",
+  "generato_il": "2026-04-12T12:35:06.131422",
   "componenti": [
     {
       "progetto": "DCT Eco",
@@ -151,13 +151,13 @@
       "data_inv": "2026-03-27",
       "stazioni": {
         "Laser W sca78(151)": {
-          "qty": 0,
+          "qty": 150,
           "sap_ops": [
             "M00034",
             "151"
           ],
           "sap_qty": 0,
-          "origin": "Sync (Avanzamento)",
+          "origin": "Override manuale",
           "tech": "SOFT"
         },
         "UT mza06": {
@@ -265,10 +265,10 @@
       "sap_qty_aperta": -6959.0,
       "sap_entrate": 0,
       "sap_uscite": 0,
-      "wip_totale": 21753,
-      "tot_wip": 21753,
+      "wip_totale": 21903,
+      "tot_wip": 21903,
       "gg_copertura_finiti": 0.0,
-      "gg_copertura_wip_fin": 24.17,
+      "gg_copertura_wip_fin": 24.336666666666666,
       "semaforo": "rosso",
       "display_order": 1
     },
@@ -558,13 +558,13 @@
       "data_inv": "2026-03-27",
       "stazioni": {
         "Laser W sca06 (151)": {
-          "qty": 0,
+          "qty": 1000,
           "sap_ops": [
             "M00015",
             "150"
           ],
           "sap_qty": 0,
-          "origin": "Sync (Avanzamento)",
+          "origin": "Override manuale",
           "tech": "SOFT"
         },
         "UT mza05": {
@@ -670,10 +670,10 @@
       "sap_qty_aperta": -3222.0,
       "sap_entrate": 0,
       "sap_uscite": 0,
-      "wip_totale": 12801,
-      "tot_wip": 12801,
+      "wip_totale": 13801,
+      "tot_wip": 13801,
       "gg_copertura_finiti": 0.0,
-      "gg_copertura_wip_fin": 14.223333333333333,
+      "gg_copertura_wip_fin": 15.334444444444445,
       "semaforo": "rosso",
       "display_order": 4
     },
@@ -688,14 +688,14 @@
       "data_inv": "2026-03-27",
       "stazioni": {
         "Soft Turning dra44": {
-          "qty": 0,
+          "qty": 1000,
           "sap_ops": [
             "10",
             "20",
             "60"
           ],
           "sap_qty": 0,
-          "origin": "Manuale",
+          "origin": "Override manuale",
           "tech": "SOFT"
         },
         "Hobbing frw15": {
@@ -799,10 +799,10 @@
       "sap_qty_aperta": 0,
       "sap_entrate": 0,
       "sap_uscite": 0,
-      "wip_totale": 0,
-      "tot_wip": 0,
+      "wip_totale": 1000,
+      "tot_wip": 1000,
       "gg_copertura_finiti": 0.0,
-      "gg_copertura_wip_fin": 0.0,
+      "gg_copertura_wip_fin": 1.1111111111111112,
       "semaforo": "rosso",
       "display_order": 5
     },
@@ -1494,14 +1494,14 @@
       "data_inv": "2026-03-27",
       "stazioni": {
         "Soft Turning dra69/70": {
-          "qty": 0,
+          "qty": 3604,
           "sap_ops": [
             "10",
             "20",
             "60"
           ],
           "sap_qty": 2604,
-          "origin": "Sync (Avanzamento)",
+          "origin": "Override manuale",
           "tech": "SOFT"
         },
         "Hobbing frw10": {
@@ -1602,10 +1602,10 @@
       "sap_qty_aperta": -1106.0,
       "sap_entrate": 0,
       "sap_uscite": 0,
-      "wip_totale": 4767,
-      "tot_wip": 4767,
+      "wip_totale": 8371,
+      "tot_wip": 8371,
       "gg_copertura_finiti": 0.0,
-      "gg_copertura_wip_fin": 12.883783783783784,
+      "gg_copertura_wip_fin": 22.624324324324323,
       "semaforo": "rosso",
       "display_order": 11
     },
@@ -3493,12 +3493,12 @@
     {
       "progetto": "DCT 300",
       "famiglia": "SG5",
-      "label": "SG5-2511125150",
+      "label": "SG5",
       "codice_hard": "2511125150",
       "codice_s": "2511125150",
       "demand_fd1": 1200,
       "finiti": 0,
-      "data_inv": "2026-03-30",
+      "data_inv": "2026-03-27",
       "stazioni": {
         "WEISSER": {
           "qty": 0,
